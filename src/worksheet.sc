@@ -1,35 +1,28 @@
-import RNG.flatMap
-
-"hello world"
+import State.unit
 
 trait RNG {
   def nextInt: (Int, RNG)
 }
 
 case class State[S, +A](run: S => (A, S)) {
- // todo move to here
+  def flatMap[B](g: A => State[S, B]): State[S, B] =
+    State(r0 => run(r0) match {
+      case (a, r1) => g(a).run(r1)
+    })
+
+  def map[B](f: A => B): State[S, B] =
+    flatMap(a => unit(f(a)))
+
+  def map2[B, C](rb: State[S, B])
+                (f: (A, B) => C): State[S, C] =
+    flatMap(a => rb.map(f(a, _)))
 }
 
 object State {
   def unit[S, A](a: A): State[S, A] = State(s => (a, s))
 
-  def flatMap[S, A, B](f: State[S, A])
-                      (g: A => State[S, B]): State[S, B] =
-    State(r0 => f.run(r0) match {
-      case (a, r1) => g(a).run(r1)
-    })
-
-  def map[S, A, B](s: State[S, A])(f: A => B): State[S, B] =
-    flatMap(s)(a => unit(f(a)))
-
-  def map2[S, A, B, C](ra: State[S, A], rb: State[S, B])
-                      (f: (A, B) => C): State[S, C] =
-    flatMap(ra)(a => map(rb)(f(a, _)))
-
   def sequence[S, A](fs: List[State[S, A]]): State[S, List[A]] =
-    fs.foldRight(unit[S, List[A]](List[A]()))(map2(_, _)(_ :: _))
-
-
+    fs.foldRight(unit[S, List[A]](List[A]()))(_.map2(_)(_ :: _))
 }
 
 type Rand[A] = State[RNG, A]
@@ -44,43 +37,40 @@ object RNG {
     }
   }
 
-  def randomPair(rng: RNG): ((Int, Int), RNG) = {
-    val (i1, rng2) = rng.nextInt
-    val (i2, rng3) = rng2.nextInt
-    ((i1, i2), rng3)
+  def randomPair: Rand[(Int, Int)] = {
+    val r: Rand[Int] = State(_.nextInt)
+    r.map2(r)((_, _))
   }
 
   def positiveInt: Rand[Int] = {
-    val nextInt: Rand[Int] = _.nextInt
-    flatMap(nextInt)(i =>
-      if (Int.MinValue != 0) map(nextInt)(_.abs) else positiveInt)
+    val nextInt: Rand[Int] = State(_.nextInt)
+    nextInt.flatMap(i =>
+      if (Int.MinValue != 0) nextInt.map(_.abs)
+      else positiveInt)
   }
 
-  def double: Rand[Double] =
-    map(_.nextInt)(_.abs.toDouble / Int.MaxValue.toDouble)
+  def double: Rand[Double] = {
+    val nextInt: Rand[Int] = State(_.nextInt)
+    nextInt.map(_.abs.toDouble / Int.MaxValue.toDouble)
+  }
 
-  def intDouble: Rand[(Int, Double)] =
-    map2(_.nextInt, double)((_, _))
+  def intDouble: Rand[(Int, Double)] = {
+    val r: Rand[Int] = State(_.nextInt)
+    r.map2(double)((_, _))
+  }
 
   def doubleInt: Rand[(Double, Int)] =
-    map(intDouble)(p => (p._2, p._1))
+    intDouble.map(p => (p._2, p._1))
 
-  def double3(rng: RNG): ((Double, Double, Double), RNG) =
-    double(rng) match {
-      case (i1, r1) => double(r1) match {
-        case (i2, r2) => double(r2) match {
-          case (i3, r3) => ((i1, i2, i3), r3)
-        }
-      }
-    }
+  def double3: Rand[(Double, Double, Double)] =
+    double.map2(double)((_, _))
+      .map2(double)((p, d) => (p._1, p._2, d))
 
   def ints(count: Int): Rand[List[Int]] =
-    sequence(List.fill(count)(_.nextInt))
-
+    State.sequence(List.fill(count)(State(_.nextInt)))
 
   def positiveMax(n: Int): Rand[Int] =
-    map(double)(d => (d * (n + 1).toDouble).toInt)
-
+    double.map(d => (d * (n + 1).toDouble).toInt)
 
 }
 
@@ -88,20 +78,20 @@ val r = RNG.simple(-1)
 val ra1 = RNG.simple(-1245)
 val ra2 = RNG.simple(-24345)
 val ra3 = RNG.simple(-1287845)
-val ri: Rand[Int] = _.nextInt
+val ri: Rand[Int] = State(_.nextInt)
 
 RNG.ints(3)
-State.sequence(ri :: ri :: ri :: Nil)(ra1)
-RNG.double(ra1)
-RNG.positiveMax(3)(ra1)
-RNG.positiveMax(3)(ra2)
-RNG.positiveMax(3)(ra3)
-RNG.positiveMax(3)(RNG.simple(-44546245))
-val resList = RNG.ints(3)(RNG.simple(-10123294))
+State.sequence(ri :: ri :: ri :: Nil).run(ra1)
+RNG.double.run(ra1)
+RNG.positiveMax(3).run(ra1)
+RNG.positiveMax(3).run(ra2)
+RNG.positiveMax(3).run(ra3)
+RNG.positiveMax(3).run(RNG.simple(-44546245))
+val resList = RNG.ints(3).run(RNG.simple(-10123294))
 resList._2.nextInt
-RNG.double3(RNG.simple(-10123294))
-RNG.doubleInt(RNG.simple(-1012324294))
-RNG.intDouble(RNG.simple(-1012324294))
-RNG.double(RNG.simple(-1012324294))
+RNG.double3.run(RNG.simple(-10123294))
+RNG.doubleInt.run(RNG.simple(-1012324294))
+RNG.intDouble.run(RNG.simple(-1012324294))
+RNG.double.run(RNG.simple(-1012324294))
 r.nextInt
-RNG.positiveInt(r)
+RNG.positiveInt.run(r)
