@@ -86,10 +86,27 @@ case object Coin extends Input
 
 case object Turn extends Input
 
-case class Machine(locked: Boolean, candies: Int, coins: Int) {
-  def simulate(inputs: List[Input]): State[Machine, Int] =
-    State(m => (0, m))
-}
+case class Machine(locked: Boolean, candies: Int, coins: Int)
+
+def simulate(inputs: List[Input]): State[Machine, Int] =
+  State(m => inputs.foldLeft(m)((m, i) => m match {
+    case Machine(_, 0, _) => m
+    case Machine(false, candies, coins) => i match {
+      case Turn => Machine(true, candies - 1, coins)
+      case _ => m
+    }
+    case Machine(true, candies, coins) => i match {
+      case Coin => Machine(false, candies, coins + 1)
+      case _ => m
+    }
+  }) match { case m => (m.coins, m)})
+
+
+simulate(List(Coin, Turn, Coin, Turn)).run(Machine(true, 5, 0))
+simulate(List(Coin, Turn, Coin, Turn)).run(Machine(true, 1, 0))
+simulate(List(Turn, Coin, Turn, Turn)).run(Machine(true, 5, 0))
+simulate(List(Coin, Coin, Turn, Turn)).run(Machine(true, 5, 0))
+
 
 val r = RNG.simple(-1)
 val ra1 = RNG.simple(-1245)
