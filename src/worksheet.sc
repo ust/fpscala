@@ -1,5 +1,4 @@
-import java.util.concurrent.{ExecutorService,
-  Executors, Future, TimeUnit}
+import java.util.concurrent.{ExecutorService, Executors, Future, TimeUnit}
 
 type Par[A] = ExecutorService => Future[A]
 
@@ -15,13 +14,36 @@ object Par {
     override def get(timeout: Long, unit: TimeUnit) = get
   }
 
+  private case class StrictFuture[A](s: ExecutorService, a: Par[A])
+    extends Future[A] {
+    val f: Future[Future[A]] = s.submit(() => a(s))
+
+    override def cancel(mayInterruptIfRunning: Boolean) =
+      f.get.cancel(mayInterruptIfRunning)
+
+    override def isCancelled = f.get().isCancelled
+
+    override def isDone = f.get.isDone
+
+    override def get(timeout: Long, unit: TimeUnit) =
+      f.get(timeout, unit).get(timeout, unit)
+
+    override def get() = {
+      f.cancel(false)
+      if (!f.isCancelled) f.get().get() else a(s).get()
+    }
+  }
+
   def unit[A](a: => A): Par[A] = _ => SyncFuture(a)
 
   // todo does is needed?
   def run[A](s: ExecutorService)(a: Par[A]): Future[A] = a(s)
 
+  def delay[A](a: => Par[A]): Par[A] = s => a(s)
+
   def fork[A](a: => Par[A]): Par[A] =
-    s => s.submit(() => a(s).get())
+    s => StrictFuture(s, delay(a))
+
 
   def product[A, B](a: Par[A], b: Par[B]): Par[(A, B)] =
     s => {
@@ -60,7 +82,7 @@ object Par {
     l.foldRight(unit(List.empty[A]))(map2(_, _)(_ :: _))
 
   def parMap[A, B](l: List[A])(f: A => B): Par[List[B]] =
-//    fork(sequence(l.map(asyncF(f))))
+  //    fork(sequence(l.map(asyncF(f))))
     sequence(l.map(asyncF(f)))
 
   def parFilter[A](l: List[A])(f: A => Boolean): Par[List[A]] =
@@ -95,8 +117,8 @@ object Par {
     map(parMap(l)(_.split(" ").length))(_.sum)
 }
 
-val s = Executors.newWorkStealingPool()
-//val s = Executors.newSingleThreadExecutor()
+//val s = Executors.newWorkStealingPool()
+val s = Executors.newSingleThreadExecutor()
 Par.map5(Par.async("A"), Par.async("B"),
   Par.async("C"), Par.async("D"),
   Par.async("E"))(_ + _ + _ + _ + _)(s).get()
@@ -107,7 +129,7 @@ Par.asyncF[Int, String](a => "f:" + a)(2)(s).get()
 Par.sequence(List(Par.async("h"),
   Par.async("u"), Par.async("y")))(s).get()
 // fixme lines below: blocks with single thread executor
-Par.sum(IndexedSeq(10,20,100, 3, -2))(s).get()
-Par.max(IndexedSeq(10,20,100, 3, -2)).get(s).get()
+Par.sum(IndexedSeq(10, 20, 100, 3, -2))(s).get()
+Par.max(IndexedSeq(10, 20, 100, 3, -2)).get(s).get()
 Par.parMap(List(1, 2, 3))("map" + _)(s).get()
 Par.wordsCount(List("abc ab abb", "bbs vv w", ""))(s).get()
