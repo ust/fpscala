@@ -30,7 +30,12 @@ object Par {
 
     override def get() = {
       f.cancel(false)
-      if (!f.isCancelled) f.get().get() else a(s).get()
+      if (f.isCancelled) a(s).get()
+      else {
+        val f0 = f.get()
+        f0.cancel(false)
+        if (f0.isCancelled) a(s).get() else f0.get()
+      }
     }
   }
 
@@ -44,6 +49,9 @@ object Par {
   def fork[A](a: => Par[A]): Par[A] =
     s => StrictFuture(s, delay(a))
 
+  def join[A](a: Par[Par[A]]): Par[A] =
+  //flatMap(a)(a => a)
+    s => a(s).get()(s)
 
   def product[A, B](a: Par[A], b: Par[B]): Par[(A, B)] =
     s => {
@@ -78,12 +86,15 @@ object Par {
     map2(a, product(b, product(c, product(d, e))))((l, r) =>
       f(l, r._1, r._2._1, r._2._2._1, r._2._2._2))
 
+  def fromTo[A, B, C](a: Par[A], b: Par[B])
+                     (f: (A, B) => C): Par[C] =
+    flatMap(a)(a0 => flatMap(b)(b0 => unit(f(a0, b0))))
+
   def sequence[A](l: List[Par[A]]): Par[List[A]] =
     l.foldRight(unit(List.empty[A]))(map2(_, _)(_ :: _))
 
   def parMap[A, B](l: List[A])(f: A => B): Par[List[B]] =
-  //    fork(sequence(l.map(asyncF(f))))
-    sequence(l.map(asyncF(f)))
+    fork(sequence(l.map(asyncF(f))))
 
   def parFilter[A](l: List[A])(f: A => Boolean): Par[List[A]] =
     map(parMap(l)(a => (a, f(a))))(_.filter(_._2).map(_._1))
@@ -91,6 +102,19 @@ object Par {
   def async[A](a: => A): Par[A] = fork(unit(a))
 
   def asyncF[A, B](f: A => B): A => Par[B] = a => async(f(a))
+
+  def flatMap[A, B](a: Par[A])(f: A => Par[B]): Par[B] =
+    join(map(a)(f))
+
+  def choiceMap[A, B](a: Par[A])(choices: Map[A, Par[B]]): Par[B] =
+    flatMap(a)(choices(_))
+
+  def choiceN[A](a: Par[Int])(choices: List[Par[A]]): Par[A] =
+    flatMap(a)(choices(_))
+
+  def choice[A](a: Par[Boolean])(ifTrue: Par[A],
+                                 ifFalse: Par[A]): Par[A] =
+    flatMap(a)(if (_) ifTrue else ifFalse)
 
   def sortPar(l: Par[List[Int]]): Par[List[Int]] =
     map(l)(_.sorted)
@@ -117,8 +141,13 @@ object Par {
     map(parMap(l)(_.split(" ").length))(_.sum)
 }
 
-//val s = Executors.newWorkStealingPool()
 val s = Executors.newSingleThreadExecutor()
+//val s = Executors.newWorkStealingPool()
+Par.join(Par.async(Par.async("hui")))(s).get()
+Par.choiceN(Par.async(2))(List(Par.async("hui"),
+  Par.async("bolt"), Par.async("shnyaga")))(s).get()
+Par.choice(Par.async(false))(Par.async("hui"),
+  Par.async("bolt"))(s).get()
 Par.map5(Par.async("A"), Par.async("B"),
   Par.async("C"), Par.async("D"),
   Par.async("E"))(_ + _ + _ + _ + _)(s).get()
@@ -128,7 +157,6 @@ Par.map(Par.async("a" + "b"))(_ + " map")(s).get()
 Par.asyncF[Int, String](a => "f:" + a)(2)(s).get()
 Par.sequence(List(Par.async("h"),
   Par.async("u"), Par.async("y")))(s).get()
-// fixme lines below: blocks with single thread executor
 Par.sum(IndexedSeq(10, 20, 100, 3, -2))(s).get()
 Par.max(IndexedSeq(10, 20, 100, 3, -2)).get(s).get()
 Par.parMap(List(1, 2, 3))("map" + _)(s).get()
