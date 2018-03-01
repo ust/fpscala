@@ -1,9 +1,5 @@
 package datastructures
 
-trait RNG {
-  def nextInt: (Int, RNG)
-}
-
 case class State[S, +A](run: S => (A, S)) {
   def flatMap[B](f: A => State[S, B]): State[S, B] =
     State(s => run(s) match {
@@ -34,6 +30,10 @@ object State {
 
   def set[S](s: S): State[S, Unit] = State(_ => ((), s))
 
+}
+
+trait RNG {
+  def nextInt: (Int, RNG)
 }
 
 object RNG {
