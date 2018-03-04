@@ -1,4 +1,5 @@
-import datastructures.{Cons, List, Nil, Stream}
+import datastructures.{Cons, List, Nil}
+import lazyness.Stream
 
 def hasSubsequence[A](l: List[A], sub: List[A]): Boolean = {
   def go(a: List[A], b: List[A]): Boolean =

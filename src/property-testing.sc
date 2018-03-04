@@ -3,15 +3,16 @@ trait Stream[+A] {
 
   def isEmpty: Boolean = uncons.isEmpty
 
-  def toList: scala.List[A] = uncons match {
-    case scala.None => scala.Nil
+  def toList: List[A] = uncons match {
+    case scala.None => Nil
     case scala.Some((h, t)) => h :: t.toList
   }
 
   def take(n: Int): Stream[A] =
     Stream.unfold((n, this))(s =>
       if (s._1 < 1) scala.None else s._2.uncons match {
-        case scala.Some((a, as)) => scala.Some((a, (s._1 - 1, as)))
+        case scala.Some((a, as)) =>
+          scala.Some((a, (s._1 - 1, as)))
         case scala.None => scala.None
       })
 
@@ -53,7 +54,7 @@ trait Stream[+A] {
   def zip[B](that: Stream[B]): Stream[(A, B)] =
     Stream.unfold((this, that))(s => s._1.uncons match {
       case scala.Some((a, as)) => s._2.uncons match {
-        case scala.Some((b, bs)) => scala.Some(((a, b), (as, bs)))
+        case scala.Some((b, bs)) => Some(((a, b), (as, bs)))
         case scala.None => scala.None
       }
       case scala.None => scala.None
@@ -62,10 +63,13 @@ trait Stream[+A] {
   def zipAll[A1 >: A, B](that: Stream[B],
                          a0: A1, b0: B): Stream[(A1, B)] =
     Stream.unfold((this, that))(s => s._1.uncons match {
-      case scala.Some((a, as)) => s._2.uncons match {
-        case scala.Some((b, bs)) => scala.Some(((a, b), (as, bs)))
-        case scala.None => scala.Some(((a, b0), (as, Stream.empty)))
-      }
+      case scala.Some((a, as)) =>
+        s._2.uncons match {
+          case scala.Some((b, bs)) =>
+            scala.Some(((a, b), (as, bs)))
+          case scala.None =>
+            scala.Some(((a, b0), (as, Stream.empty)))
+        }
       case scala.None => s._2.uncons match {
         case scala.Some((b, bs)) =>
           scala.Some(((a0, b), (Stream.empty, bs)))
@@ -78,7 +82,8 @@ trait Stream[+A] {
     Stream.unfold((this, that))(s => s._2.uncons match {
       case scala.Some((h, t)) => s._1.uncons match {
         case scala.Some((a, as)) =>
-          if (h == a) scala.Some(false, (as, t)) else scala.None
+          if (h == a)
+            scala.Some(false, (as, t)) else scala.None
         case _ => scala.None
       }
       case _ => scala.Some(true, (Stream.empty, Stream.empty))
@@ -127,7 +132,7 @@ object Stream {
     Stream.unfold((0, 1))(s =>
       scala.Some((s._1, (s._2, s._1 + s._2))))
 
-  def unfold[A, S](z: S)(f: S => scala.Option[(A, S)]): Stream[A] =
+  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] =
     f(z).map(p => Stream.cons(p._1, unfold(p._2)(f)))
       .getOrElse(Stream.empty)
 
@@ -205,36 +210,83 @@ object RNG {
     double.map2(double)((_, _))
       .map2(double)((p, d) => (p._1, p._2, d))
 
-  def ints(count: Int): Rand[scala.List[Int]] =
-    State.sequence(scala.List.fill(count)(int))
+  def ints(count: Int): Rand[List[Int]] =
+    State.sequence(List.fill(count)(int))
 
   def positiveMax(n: Int): Rand[Int] =
     double.map(d => (d * (n + 1).toDouble).toInt)
 
 }
 
-//type Gen[A] = State[RNG, A]
 
-case class Gen[+A](sample: State[RNG, A], exhaustive: Stream[A])
+
+
+case class Gen[+A](sample: State[RNG, A],
+                   exhaustive: Stream[Option[A]])
 
 object Gen {
-  def unit[A](a: => A): Gen[A] = Gen(State.unit(a), Stream(a))
+  type Domain[+A] = Stream[Option[A]]
+
+  def bounded[A](a: Stream[A]): Domain[A] = a map (Some(_))
+
+  def unbounded: Domain[Nothing] = Stream(None)
+
+  def unit[A](a: => A): Gen[A] =
+    Gen(State.unit(a), bounded(Stream(a)))
+
+  /** Generate lists of length n, using the given generator. */
+  def listOfN[A](n: Int, g: Gen[A]): Gen[List[A]] = {
+    def go(s: List[Domain[A]]): List[Domain[A]] = s match {
+      case d :: ds => d.uncons match {
+        case Some((_, t)) => t.uncons match {
+          case Some(_) => t :: ds
+          case None => ds match {
+            case Nil => t :: ds
+            case _ => g.exhaustive :: go(ds)
+          }
+        }
+        case None => s
+      }
+      case Nil => s
+    }
+
+    val s = State.sequence(List.fill(n)(g.sample))
+    if (g.exhaustive == unbounded)
+      Gen(s, unbounded)
+    else
+      Gen(s, bounded(Stream.
+        unfold(List.fill(n)(g.exhaustive))(s => {
+          val s0: Option[List[A]] = Some(Nil)
+          val as = s.foldRight(s0)((d, b) =>
+            b.flatMap(l => d.uncons.map(_._1.get :: l)))
+          as.filter(_.nonEmpty).map((_, go(s)))
+        })))
+  }
 
   def listOf[A](a: Gen[A]): Gen[List[A]] =
     ???
 
-  /** Generate lists of length n, using the given generator. */
-  def listOfN[A](n: Int, g: Gen[A]): Gen[List[A]] = {
-    Gen(State.sequence(List.fill(n)(g.sample)), Stream.empty)
+  /** Between 0 and 1, not including 1. */
+  def uniform: Gen[Double] = Gen(RNG.double, unbounded)
+
+  /** Between `i` and `j`, not including `j`. */
+  def choose(i: Double, j: Double): Gen[Double] =
+    Gen(uniform.sample.map(d => d * (j - i).abs + i),
+      unbounded)
+
+  def choose(start: Int, stopExclusive: Int): Gen[Int] = {
+    val s = choose(start.toDouble,
+      stopExclusive.toDouble).sample.map(_.intValue())
+    val d = bounded(Stream.unfold(start)(s =>
+      if (s < stopExclusive) Some((s, s + 1)) else None))
+    Gen(s, d)
   }
 
-  def choose(start: Int, stopExclusive: Int): Gen[Int] =
-    Gen(RNG.double
-      .map(d => d * (stopExclusive.abs - start.abs) + start)
-      .map(_.intValue()), Stream.empty)
-
-  def boolean: Gen[Boolean] =
-    Gen(choose(0, 2).sample.map(_ == 1), Stream.empty)
+  def boolean: Gen[Boolean] = {
+    val b = choose(0, 2)
+    val m: Int => Boolean = _ == 1
+    Gen(b.sample.map(m), b.exhaustive.map(_.map(m)))
+  }
 }
 
 object Prop {
@@ -257,13 +309,33 @@ trait Prop {
 
 def print[A](s: State[RNG, A], l: RNG) = s.run(l)._1
 def print[A](g: Gen[A], l: RNG) = g.sample.run(l)._1
+def print[A](g: Gen[A]) =
+  g.exhaustive.filter(_.isDefined).map(_.get).toList
 val rng = RNG.simple(0)
 val rng1 = RNG.simple(1245341)
-print(RNG.double, rng1)
-print(Gen.choose(0, 5), rng1)
+val rng2 = RNG.simple(12431)
+
+print(Gen.uniform)
+print(Gen.uniform, rng)
+print(Gen.uniform, rng1)
+print(Gen.uniform, rng2)
+print(Gen.choose(-12.2, 5.89))
+print(Gen.choose(-12.2, 5.89), rng)
+print(Gen.choose(-12.2, 5.89), rng1)
+print(Gen.choose(-12.2, 5.89), rng2)
+print(Gen.choose(-3, 5))
+print(Gen.choose(-3, 5), rng1)
+print(Gen.boolean)
 print(Gen.boolean, rng)
 print(Gen.boolean, rng1)
-print(Gen.listOfN(14, Gen.choose(1,6)), rng1)
+print(Gen.listOfN(2, Gen.choose(1, 1)))
+print(Gen.listOfN(2, Gen.choose(1, 2)))
+print(Gen.listOfN(1, Gen.choose(1, 4)))
+print(Gen.listOfN(2, Gen.choose(1, 3)))
+print(Gen.listOfN(3, Gen.choose(1, 3)))
+print(Gen.listOfN(2, Gen.choose(1, 4)))
+print(Gen.listOfN(0, Gen.choose(1, 3)))
+print(Gen.listOfN(2, Gen.choose(1, 3)), rng1)
 
 
 

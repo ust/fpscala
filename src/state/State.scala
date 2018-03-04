@@ -1,4 +1,4 @@
-package datastructures
+package state
 
 case class State[S, +A](run: S => (A, S)) {
   def flatMap[B](f: A => State[S, B]): State[S, B] =

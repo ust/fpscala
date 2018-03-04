@@ -1,4 +1,4 @@
-package datastructures
+package lazyness
 
 trait Stream[+A] {
   def uncons: scala.Option[(A, Stream[A])]
@@ -76,11 +76,12 @@ trait Stream[+A] {
     })
 
   // todo with zip and forAll
-  def startsWith[A](that: Stream[A]): Boolean =
+  def startsWith[A1 >: A](that: Stream[A1]): Boolean =
     Stream.unfold((this, that))(s => s._2.uncons match {
       case scala.Some((h, t)) => s._1.uncons match {
         case scala.Some((a, as)) =>
-          if (h == a) scala.Some(false, (as, t)) else scala.None
+          if (h == a)
+            scala.Some(false, (as, t)) else scala.None
         case _ => scala.None
       }
       case _ => scala.Some(true, (Stream.empty, Stream.empty))
@@ -92,8 +93,8 @@ trait Stream[+A] {
       case _ => scala.None
     }).append(Stream.empty)
 
-  def hasSubsequence[A](s1: Stream[A],
-                        s2: Stream[A]): Boolean =
+  def hasSubsequence[A1 >: A](s1: Stream[A1],
+                              s2: Stream[A1]): Boolean =
     s1.tails exists (_.startsWith(s2))
 
   def scanRight[B](z: => B)(f: (A, => B) => B): Stream[B] =
