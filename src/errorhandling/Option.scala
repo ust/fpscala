@@ -1,4 +1,4 @@
-package datastructures
+package errorhandling
 
 import java.util.regex.{Pattern, PatternSyntaxException}
 
