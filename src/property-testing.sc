@@ -219,8 +219,6 @@ object RNG {
 }
 
 
-
-
 case class Gen[+A](sample: State[RNG, A],
                    exhaustive: Stream[Option[A]])
 
@@ -233,6 +231,15 @@ object Gen {
 
   def unit[A](a: => A): Gen[A] =
     Gen(State.unit(a), bounded(Stream(a)))
+
+  def map[A, B](g: Gen[A])(a: A => B): Gen[B] =
+    Gen(g.sample.map(a), g.exhaustive.map(_.map(a)))
+
+  def flatMap[A, B](g: Gen[A])
+                   (a: A => Gen[B]): Gen[B] =
+    Gen(g.sample.flatMap(a(_).sample),
+      g.exhaustive.flatMap(_.map(a(_).exhaustive)
+        .getOrElse(Stream.empty)))
 
   /** Generate lists of length n, using the given generator. */
   def listOfN[A](n: Int, g: Gen[A]): Gen[List[A]] = {
@@ -264,7 +271,7 @@ object Gen {
   }
 
   def listOf[A](a: Gen[A]): Gen[List[A]] =
-    ???
+    flatMap(choose(0, 100))(listOfN(_, a))
 
   /** Between 0 and 1, not including 1. */
   def uniform: Gen[Double] = Gen(RNG.double, unbounded)
@@ -287,6 +294,18 @@ object Gen {
     val m: Int => Boolean = _ == 1
     Gen(b.sample.map(m), b.exhaustive.map(_.map(m)))
   }
+
+  def short: Gen[Short] = map(choose(Short.MinValue.toInt,
+    Short.MaxValue.toInt))(_.toShort)
+
+  def integer: Gen[Int] = choose(Int.MinValue, Int.MaxValue)
+
+  val charlist = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
+
+  def character: Gen[Char] =
+    map(choose(0, charlist.size))(charlist(_))
+
+  def string: Gen[String] = map(listOf(character))(_.mkString)
 }
 
 object Prop {
@@ -336,6 +355,12 @@ print(Gen.listOfN(3, Gen.choose(1, 3)))
 print(Gen.listOfN(2, Gen.choose(1, 4)))
 print(Gen.listOfN(0, Gen.choose(1, 3)))
 print(Gen.listOfN(2, Gen.choose(1, 3)), rng1)
+print(Gen.listOf(Gen.choose(1, 6)), rng1)
+print(Gen.listOf(Gen.character), rng1)
+print(Gen.integer, rng2)
+print(Gen.character, rng2)
+print(Gen.short, rng2)
+print(Gen.string, rng2)
 
 
 
