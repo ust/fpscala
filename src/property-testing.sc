@@ -220,7 +220,28 @@ object RNG {
 
 
 case class Gen[+A](sample: State[RNG, A],
-                   exhaustive: Stream[Option[A]])
+                   exhaustive: Stream[Option[A]]) {
+  def flatMap[B](a: A => Gen[B]): Gen[B] =
+    Gen(sample.flatMap(a(_).sample),
+      exhaustive.flatMap(_.map(a(_).exhaustive)
+        .getOrElse(Stream.empty)))
+
+  def map[B](a: A => B): Gen[B] =
+    Gen(sample.map(a), exhaustive.map(_.map(a)))
+
+  def map2[B, C](b: Gen[B])
+                (f: (A, B) => C): Gen[C] =
+    flatMap(a0 => b.map(f(a0, _)))
+
+  def listOfN(size: Gen[Int]): Gen[List[A]] =
+    size.flatMap(listOfN)
+
+  def listOfN(n: Int): Gen[List[A]] = n match {
+    case 0 => map(_ => Nil)
+    case 1 => map(_ :: Nil)
+    case _ => flatMap(a => listOfN(n - 1).map(a :: _))
+  }
+}
 
 object Gen {
   type Domain[+A] = Stream[Option[A]]
@@ -232,54 +253,25 @@ object Gen {
   def unit[A](a: => A): Gen[A] =
     Gen(State.unit(a), bounded(Stream(a)))
 
-  def map[A, B](g: Gen[A])(a: A => B): Gen[B] =
-    Gen(g.sample.map(a), g.exhaustive.map(_.map(a)))
-
-  def flatMap[A, B](g: Gen[A])
-                   (a: A => Gen[B]): Gen[B] =
-    Gen(g.sample.flatMap(a(_).sample),
-      g.exhaustive.flatMap(_.map(a(_).exhaustive)
-        .getOrElse(Stream.empty)))
-
-  /** Generate lists of length n, using the given generator. */
-  def listOfN[A](n: Int, g: Gen[A]): Gen[List[A]] = {
-    def go(s: List[Domain[A]]): List[Domain[A]] = s match {
-      case d :: ds => d.uncons match {
-        case Some((_, t)) => t.uncons match {
-          case Some(_) => t :: ds
-          case None => ds match {
-            case Nil => t :: ds
-            case _ => g.exhaustive :: go(ds)
-          }
-        }
-        case None => s
-      }
-      case Nil => s
-    }
-
-    val s = State.sequence(List.fill(n)(g.sample))
-    if (g.exhaustive == unbounded)
-      Gen(s, unbounded)
-    else
-      Gen(s, bounded(Stream.
-        unfold(List.fill(n)(g.exhaustive))(s => {
-          val s0: Option[List[A]] = Some(Nil)
-          val as = s.foldRight(s0)((d, b) =>
-            b.flatMap(l => d.uncons.map(_._1.get :: l)))
-          as.filter(_.nonEmpty).map((_, go(s)))
-        })))
-  }
-
   def listOf[A](a: Gen[A]): Gen[List[A]] =
-    flatMap(choose(0, 100))(listOfN(_, a))
+    a.listOfN(choose(0, 11))
+
+  def sameParity(from: Int, to: Int): Gen[(Int, Int)] = {
+    val g = choose(from, to)
+    g.flatMap(i => g.flatMap(j => g.map(k => {
+      val ie = i % 2 == 0
+      val je = j % 2 == 0
+      val ke = k % 2 == 0
+      if (ie == je) (i, j) else if (ie == ke) (i, k) else (j, k)
+    })))
+  }
 
   /** Between 0 and 1, not including 1. */
   def uniform: Gen[Double] = Gen(RNG.double, unbounded)
 
   /** Between `i` and `j`, not including `j`. */
   def choose(i: Double, j: Double): Gen[Double] =
-    Gen(uniform.sample.map(d => d * (j - i).abs + i),
-      unbounded)
+    uniform.map(d => d * (j - i).abs + i)
 
   def choose(start: Int, stopExclusive: Int): Gen[Int] = {
     val s = choose(start.toDouble,
@@ -289,23 +281,20 @@ object Gen {
     Gen(s, d)
   }
 
-  def boolean: Gen[Boolean] = {
-    val b = choose(0, 2)
-    val m: Int => Boolean = _ == 1
-    Gen(b.sample.map(m), b.exhaustive.map(_.map(m)))
-  }
+  def boolean: Gen[Boolean] = choose(0, 2).map(_ == 1)
 
-  def short: Gen[Short] = map(choose(Short.MinValue.toInt,
-    Short.MaxValue.toInt))(_.toShort)
+  def short: Gen[Short] =
+    choose(Short.MinValue.toInt, Short.MaxValue.toInt)
+      .map(_.toShort)
 
   def integer: Gen[Int] = choose(Int.MinValue, Int.MaxValue)
 
   val charlist = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
 
   def character: Gen[Char] =
-    map(choose(0, charlist.size))(charlist(_))
+    choose(0, charlist.size).map(charlist(_))
 
-  def string: Gen[String] = map(listOf(character))(_.mkString)
+  def string: Gen[String] = listOf(character).map(_.mkString)
 }
 
 object Prop {
@@ -347,14 +336,15 @@ print(Gen.choose(-3, 5), rng1)
 print(Gen.boolean)
 print(Gen.boolean, rng)
 print(Gen.boolean, rng1)
-print(Gen.listOfN(2, Gen.choose(1, 1)))
-print(Gen.listOfN(2, Gen.choose(1, 2)))
-print(Gen.listOfN(1, Gen.choose(1, 4)))
-print(Gen.listOfN(2, Gen.choose(1, 3)))
-print(Gen.listOfN(3, Gen.choose(1, 3)))
-print(Gen.listOfN(2, Gen.choose(1, 4)))
-print(Gen.listOfN(0, Gen.choose(1, 3)))
-print(Gen.listOfN(2, Gen.choose(1, 3)), rng1)
+print(Gen.choose(1, 1).listOfN(2))
+print(Gen.choose(1, 2).listOfN(2))
+print(Gen.choose(1, 4).listOfN(1))
+print(Gen.choose(1, 3).listOfN(2))
+print(Gen.choose(1, 3).listOfN(3))
+print(Gen.choose(1, 4).listOfN(2))
+print(Gen.choose(1, 3).listOfN(0))
+print(Gen.choose(1, 3).listOfN(2), rng1)
+print(Gen.sameParity(1, 4))
 print(Gen.listOf(Gen.choose(1, 6)), rng1)
 print(Gen.listOf(Gen.character), rng1)
 print(Gen.integer, rng2)
