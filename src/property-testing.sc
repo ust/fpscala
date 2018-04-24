@@ -241,7 +241,11 @@ case class Gen[+A](sample: State[RNG, A],
     case 1 => map(_ :: Nil)
     case _ => flatMap(a => listOfN(n - 1).map(a :: _))
   }
+
+  def unsized: SGen[A] = SGen(_ => this)
 }
+
+case class SGen[+A](forSize: Int => Gen[A])
 
 object Gen {
   type Domain[+A] = Stream[Option[A]]
@@ -253,18 +257,19 @@ object Gen {
   def unit[A](a: => A): Gen[A] =
     Gen(State.unit(a), bounded(Stream(a)))
 
-  def listOf[A](a: Gen[A]): Gen[List[A]] =
+  def randomListOf[A](a: Gen[A]): Gen[List[A]] =
     a.listOfN(choose(0, 11))
 
-  def sameParity(from: Int, to: Int): Gen[(Int, Int)] = {
-    val g = choose(from, to)
-    g.flatMap(i => g.flatMap(j => g.map(k => {
-      val ie = i % 2 == 0
-      val je = j % 2 == 0
-      val ke = k % 2 == 0
-      if (ie == je) (i, j) else if (ie == ke) (i, k) else (j, k)
-    })))
-  }
+  def listOf[A](g: Gen[A]): SGen[List[A]] =
+    SGen(n => g.listOfN(n))
+
+  def union[A](g1: Gen[A], g2: Gen[A]): Gen[A] =
+    boolean.flatMap(if (_) g2 else g1)
+
+  def weighted[A](g1: (Gen[A], Double),
+                  g2: (Gen[A], Double)): Gen[A] =
+    uniform.flatMap(p =>
+      if (p * (g1._2 + g2._2) < g1._2) g1._1 else g2._1)
 
   /** Between 0 and 1, not including 1. */
   def uniform: Gen[Double] = Gen(RNG.double, unbounded)
@@ -289,31 +294,121 @@ object Gen {
 
   def integer: Gen[Int] = choose(Int.MinValue, Int.MaxValue)
 
+  def sameParity(from: Int, to: Int): Gen[(Int, Int)] = {
+    val g = choose(from, to)
+    g.flatMap(i => g.flatMap(j => g.map(k => {
+      val ie = i % 2 == 0
+      val je = j % 2 == 0
+      val ke = k % 2 == 0
+      if (ie == je) (i, j) else if (ie == ke) (i, k) else (j, k)
+    })))
+  }
+
   val charlist = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
 
   def character: Gen[Char] =
     choose(0, charlist.size).map(charlist(_))
 
-  def string: Gen[String] = listOf(character).map(_.mkString)
+  def string: Gen[String] =
+    randomListOf(character).map(_.mkString)
+}
+
+trait Status
+
+case object Exhausted extends Status
+
+case object Proven extends Status
+
+case object Unfalsified extends Status
+
+type MaxSize = Int
+type TestCases = Int
+type FailedCase = String
+type SuccessCount = Int
+type Result = Either[FailedCase, (Status, SuccessCount)]
+
+case class Prop(run: (MaxSize, TestCases, RNG) => Result) {
+  def &&(p: Prop): Prop = Prop { (m, t, rng) =>
+    run(m, t, rng) match {
+      case Right((s1, c1)) => p.run(t, rng) match {
+        case Right((s2, c2)) =>
+          if (s1 == s2 && s1 == Proven) Right((Proven, c1 + c2))
+          else Right((Unfalsified, c1 + c2))
+        case failed => failed
+      }
+      case failed => failed
+    }
+  }
+
+  def ||(p: Prop): Prop = Prop { (m, t, rng) =>
+    run(m, t, rng) match {
+      case r@Right(_) => r
+      case failed1 => p.run(t, rng) match {
+        case r@Right(_) => r
+        case failed2 => failed2
+      }
+    }
+  }
+
 }
 
 object Prop {
-  type FailedCase = String
-  type SuccessCount = Int
+  def forAll[A](a: Gen[A])(f: A => Boolean): Prop = Prop {
+    def go(i: Int, j: Int,
+           s: Stream[Option[A]],
+           onEnd: Int => Result): Result =
+      if (i == j) Right((Unfalsified, i))
+      else s.uncons match {
+        case Some((Some(h), t)) =>
+          try {
+            if (f(h)) go(i + 1, j, s, onEnd)
+            else Left(h.toString)
+          }
+          catch {
+            case e: Exception => Left(buildMsg(h, e))
+          }
+        case Some((None, _)) => Right((Unfalsified, i))
+        case None => onEnd(i)
+      }
 
-}
-
-trait Prop {
-  //  def check: Either[FailedCase, SuccessCount]
-  def check: Either[String, Int]
-
-  def forAll[A](a: Gen[A])(f: A => Boolean): Prop
-
-  def &&(p: Prop): Prop = this.check match {
-    case Left(_) => this
-    case _ => p
+    (m, n, rng) => {
+      go(0, n / 3, a.exhaustive, i => Right((Proven, i))) match {
+        case Right((Unfalsified, _)) =>
+          val rands = randomStream(a)(rng).map(Some(_))
+          go(n / 3, n, rands, i => Right((Unfalsified, i)))
+        case s => s
+      }
+    }
   }
+
+  def forAll[A](g: SGen[A])(f: A => Boolean): Prop = Prop {
+    (m, n, rng) => Left("nothing yet")
+  }
+
+  def forAll[A](g: Int => Gen[A])(f: A => Boolean): Prop = Prop {
+    (max, n, rng) =>
+      val casesPerSize = n / max + 1
+      val props: List[Prop] =
+        Stream.from(0).take(max + 1)
+          .map(i => forAll(g(i))(f)).toList
+      val result: Result = props.map(p => Prop((max, n, rng) =>
+        p.run(max, casesPerSize, rng)))
+        .reduceLeft(_ && _)(max, n, rng)
+      result
+  }
+
+  /** Produce an infinite random stream from a `Gen`
+    * and a starting `RNG`. */
+  def randomStream[A](g: Gen[A])(rng: RNG): Stream[A] =
+    Stream.unfold(rng)(rng => Some(g.sample.run(rng)))
+
+  def buildMsg[A](s: A, e: Exception): String =
+    "test case: " + s + "\n" +
+      "generated an exception: " + e.getMessage + "\n" +
+      "stack trace:\n" + e.getStackTrace.mkString("\n")
+
 }
+
 
 def print[A](s: State[RNG, A], l: RNG) = s.run(l)._1
 def print[A](g: Gen[A], l: RNG) = g.sample.run(l)._1
@@ -345,12 +440,20 @@ print(Gen.choose(1, 4).listOfN(2))
 print(Gen.choose(1, 3).listOfN(0))
 print(Gen.choose(1, 3).listOfN(2), rng1)
 print(Gen.sameParity(1, 4))
-print(Gen.listOf(Gen.choose(1, 6)), rng1)
-print(Gen.listOf(Gen.character), rng1)
+print(Gen.randomListOf(Gen.choose(1, 6)), rng1)
+print(Gen.randomListOf(Gen.character), rng1)
 print(Gen.integer, rng2)
 print(Gen.character, rng2)
 print(Gen.short, rng2)
 print(Gen.string, rng2)
+print(Gen.union(Gen.choose(0, 3), Gen.choose(3, 5)), rng)
+
+print(Gen.weighted((Gen.choose(0, 5), 0.5),
+  (Gen.choose(5, 10), 0.5)), rng2)
+print(Gen.weighted((Gen.choose(0, 5), 0.3),
+  (Gen.choose(5, 10), 0.7)), rng2)
+print(Gen.union(Gen.choose(0, 3), Gen.choose(3, 5)), rng1)
+print(Gen.union(Gen.choose(0, 3), Gen.choose(3, 6)))
 
 
 
