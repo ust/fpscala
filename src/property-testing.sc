@@ -242,10 +242,12 @@ case class Gen[+A](sample: State[RNG, A],
     case _ => flatMap(a => listOfN(n - 1).map(a :: _))
   }
 
-  def unsized: SGen[A] = SGen(_ => this)
+  def unsized: SGen[A] = Unsized(this)
 }
 
-case class SGen[+A](forSize: Int => Gen[A])
+trait SGen[+A]
+case class Sized[+A](forSize: Size => Gen[A]) extends SGen[A]
+case class Unsized[+A](get: Gen[A]) extends SGen[A]
 
 object Gen {
   type Domain[+A] = Stream[Option[A]]
@@ -261,7 +263,7 @@ object Gen {
     a.listOfN(choose(0, 11))
 
   def listOf[A](g: Gen[A]): SGen[List[A]] =
-    SGen(n => g.listOfN(n))
+    Sized(n => g.listOfN(n))
 
   def union[A](g1: Gen[A], g2: Gen[A]): Gen[A] =
     boolean.flatMap(if (_) g2 else g1)
@@ -321,6 +323,7 @@ case object Proven extends Status
 
 case object Unfalsified extends Status
 
+type Size = Int
 type MaxSize = Int
 type TestCases = Int
 type FailedCase = String
@@ -330,7 +333,7 @@ type Result = Either[FailedCase, (Status, SuccessCount)]
 case class Prop(run: (MaxSize, TestCases, RNG) => Result) {
   def &&(p: Prop): Prop = Prop { (m, t, rng) =>
     run(m, t, rng) match {
-      case Right((s1, c1)) => p.run(t, rng) match {
+      case Right((s1, c1)) => p.run(m, t, rng) match {
         case Right((s2, c2)) =>
           if (s1 == s2 && s1 == Proven) Right((Proven, c1 + c2))
           else Right((Unfalsified, c1 + c2))
@@ -343,16 +346,32 @@ case class Prop(run: (MaxSize, TestCases, RNG) => Result) {
   def ||(p: Prop): Prop = Prop { (m, t, rng) =>
     run(m, t, rng) match {
       case r@Right(_) => r
-      case failed1 => p.run(t, rng) match {
+      case failed1 => p.run(m, t, rng) match {
         case r@Right(_) => r
         case failed2 => failed2
       }
     }
   }
-
 }
 
 object Prop {
+  def forAll[A](g: SGen[A])(f: A => Boolean): Prop = g match {
+    case Sized(p) => forAll(p)(f)
+    case Unsized(p) => forAll(p)(f)
+  }
+
+  def forAll[A](g: Int => Gen[A])(f: A => Boolean): Prop = Prop {
+    (max, n, rng) =>
+      val casesPerSize = n / max + 1
+      val props: List[Prop] =
+        Stream.from(0).take(max + 1)
+          .map(i => forAll(g(i))(f)).toList
+      val result: Result = props.map(p => Prop {
+        (m, _, r) => p.run(m, casesPerSize, r)
+      }).reduceLeft(_ && _)(max, n, rng)
+      result
+  }
+
   def forAll[A](a: Gen[A])(f: A => Boolean): Prop = Prop {
     def go(i: Int, j: Int,
            s: Stream[Option[A]],
@@ -361,7 +380,7 @@ object Prop {
       else s.uncons match {
         case Some((Some(h), t)) =>
           try {
-            if (f(h)) go(i + 1, j, s, onEnd)
+            if (f(h)) go(i + 1, j, t, onEnd) // maybe s->t ?
             else Left(h.toString)
           }
           catch {
@@ -381,22 +400,6 @@ object Prop {
     }
   }
 
-  def forAll[A](g: SGen[A])(f: A => Boolean): Prop = Prop {
-    (m, n, rng) => Left("nothing yet")
-  }
-
-  def forAll[A](g: Int => Gen[A])(f: A => Boolean): Prop = Prop {
-    (max, n, rng) =>
-      val casesPerSize = n / max + 1
-      val props: List[Prop] =
-        Stream.from(0).take(max + 1)
-          .map(i => forAll(g(i))(f)).toList
-      val result: Result = props.map(p => Prop((max, n, rng) =>
-        p.run(max, casesPerSize, rng)))
-        .reduceLeft(_ && _)(max, n, rng)
-      result
-  }
-
   /** Produce an infinite random stream from a `Gen`
     * and a starting `RNG`. */
   def randomStream[A](g: Gen[A])(rng: RNG): Stream[A] =
@@ -406,6 +409,22 @@ object Prop {
     "test case: " + s + "\n" +
       "generated an exception: " + e.getMessage + "\n" +
       "stack trace:\n" + e.getStackTrace.mkString("\n")
+
+  def run(p: Prop,
+          maxSize: MaxSize = 100,
+          testCases: TestCases = 100,
+          rng: RNG = RNG.simple(System.currentTimeMillis)): Unit = {
+    p.run(maxSize, testCases, rng) match {
+      case Left(msg) => println("! test failed:\n" + msg)
+      case Right((Unfalsified, n)) =>
+        println("+ property unfalsified, ran " + n + " tests")
+      case Right((Proven, n)) =>
+        println("+ property proven, ran " + n + " tests")
+      case Right((Exhausted, n)) =>
+        println("+ property unfalsified up to max size, ran " +
+          n + " tests")
+    }
+  }
 
 }
 
@@ -417,6 +436,13 @@ def print[A](g: Gen[A]) =
 val rng = RNG.simple(0)
 val rng1 = RNG.simple(1245341)
 val rng2 = RNG.simple(12431)
+
+val smallInt = Gen.choose(-10,10)
+val maxProp = Prop.forAll(Gen.listOf(smallInt)) { l =>
+  val max = l.max
+  !l.exists(_ > max)
+}
+Prop.run(maxProp)
 
 print(Gen.uniform)
 print(Gen.uniform, rng)
