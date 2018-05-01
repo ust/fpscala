@@ -1,9 +1,10 @@
 package propertytesting
 
-import state._
 import lazyness.Stream
-import Gen._
-import Prop._
+import propertytesting.Prop._
+import state._
+
+import scala.collection.immutable
 
 case class Gen[+A](sample: State[RNG, A],
                    exhaustive: Stream[Option[A]]) {
@@ -103,7 +104,7 @@ object Gen {
     })))
   }
 
-  val charList = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
+  val charList: Seq[Char] = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
 
   def character: Gen[Char] =
     choose(0, charList.size).map(charList(_))
@@ -112,21 +113,29 @@ object Gen {
     randomListOf(character).map(_.mkString)
 }
 
-trait Status
-
-case object Exhausted extends Status
+trait Status {
+  def min(s: Status): Status = Status.min(this, s)
+}
 
 case object Proven extends Status
 
+case object Exhausted extends Status
+
 case object Unfalsified extends Status
+
+object Status {
+  val order = List(Unfalsified, Exhausted, Proven)
+
+  def min(a: Status, b: Status): Status =
+    if (order.indexOf(a) <= order.indexOf(b)) a else b
+}
 
 case class Prop(run: (MaxSize, TestCases, RNG) => Result) {
   def &&(p: Prop): Prop = Prop { (m, t, rng) =>
     run(m, t, rng) match {
       case Right((s1, c1)) => p.run(m, t, rng) match {
         case Right((s2, c2)) =>
-          if (s1 == s2 && s1 == Proven) Right((Proven, c1 + c2))
-          else Right((Unfalsified, c1 + c2))
+          Right((s1 min s2, c1 + c2))
         case failed => failed
       }
       case failed => failed

@@ -1,3 +1,6 @@
+import java.util.concurrent.{ExecutorService, Executors}
+
+import parallelism._
 import propertytesting._
 import state._
 
@@ -16,15 +19,15 @@ val assertListMax: List[Int] => Boolean = l => {
 }
 val assertListSort: List[Int] => Boolean = l => {
   val ls = l.sorted
-  l.isEmpty || !l.zip(l.tail).exists { case (a, b) => a > b }
+  ls.isEmpty || !ls.zip(ls.tail).exists { case (a, b) => a > b }
 }
 Prop.run(Prop.forAll(Gen.listOf(smallInt))(assertListMax))
 Prop.run(Prop.forAll(Gen.listOf1(smallInt))(assertListMax))
-Prop.run(Prop.forAll(Gen.listOf(smallInt))(assertListSort),
-  maxSize = 2, testCases = 1, rng = rng1)
+Prop.run(Prop.forAll(Gen.listOf(smallInt))(assertListSort))
 
-val failedL = List(7, -3).sorted
-failedL.zip(failedL.tail).exists { case (a, b) => a > b }
+val ES: ExecutorService = Executors.newCachedThreadPool
+val p1 = Prop.forAll(Gen.unit(Par.unit(1)))(i =>
+  Par.map(i)(_ + 1)(ES).get == Par.unit(2)(ES).get)
 
 print(Gen.uniform)
 print(Gen.uniform, rng)
