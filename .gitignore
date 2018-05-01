@@ -6,6 +6,7 @@
 .idea/**/tasks.xml
 .idea/**/vsc.xml
 .idea/dictionaries
+.idea/
 
 # Sensitive or high-churn files:
 .idea/**/dataSources/
@@ -34,6 +35,7 @@ cmake-build-release/
 
 # IntelliJ
 out/
+*.iml
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/

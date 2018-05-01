@@ -1,26 +1,27 @@
 package lazyness
 
 trait Stream[+A] {
-  def uncons: scala.Option[(A, Stream[A])]
+  def uncons: Option[(A, Stream[A])]
 
   def isEmpty: Boolean = uncons.isEmpty
 
-  def toList: scala.List[A] = uncons match {
-    case scala.None => scala.Nil
-    case scala.Some((h, t)) => h :: t.toList
+  def toList: List[A] = uncons match {
+    case None => Nil
+    case Some((h, t)) => h :: t.toList
   }
 
   def take(n: Int): Stream[A] =
     Stream.unfold((n, this))(s =>
-      if (s._1 < 1) scala.None else s._2.uncons match {
-        case scala.Some((a, as)) => scala.Some((a, (s._1 - 1, as)))
-        case scala.None => scala.None
+      if (s._1 < 1) None else s._2.uncons match {
+        case Some((a, as)) =>
+          Some((a, (s._1 - 1, as)))
+        case None => None
       })
 
   def foldRight[B](z: => B)(f: (A, => B) => B): B =
     uncons match {
-      case scala.Some((h, t)) => f(h, t.foldRight(z)(f))
-      case scala.None => z
+      case Some((h, t)) => f(h, t.foldRight(z)(f))
+      case None => z
     }
 
   def exists(p: A => Boolean): Boolean =
@@ -31,14 +32,14 @@ trait Stream[+A] {
 
   def takeWhile(p: A => Boolean): Stream[A] =
     Stream.unfold(this)(s => s.uncons match {
-      case scala.Some((h, t)) if p(h) => scala.Some((h, t))
-      case _ => scala.None
+      case Some((h, t)) if p(h) => Some((h, t))
+      case _ => None
     })
 
   def map[B](f: A => B): Stream[B] =
     Stream.unfold(this)(s => s.uncons match {
-      case scala.Some((a, as)) => scala.Some((f(a), as))
-      case scala.None => scala.None
+      case Some((a, as)) => Some((f(a), as))
+      case None => None
     })
 
   def filter(p: A => Boolean): Stream[A] =
@@ -54,43 +55,46 @@ trait Stream[+A] {
 
   def zip[B](that: Stream[B]): Stream[(A, B)] =
     Stream.unfold((this, that))(s => s._1.uncons match {
-      case scala.Some((a, as)) => s._2.uncons match {
-        case scala.Some((b, bs)) => scala.Some(((a, b), (as, bs)))
-        case scala.None => scala.None
+      case Some((a, as)) => s._2.uncons match {
+        case Some((b, bs)) => Some(((a, b), (as, bs)))
+        case None => None
       }
-      case scala.None => scala.None
+      case None => None
     })
 
   def zipAll[A1 >: A, B](that: Stream[B],
                          a0: A1, b0: B): Stream[(A1, B)] =
     Stream.unfold((this, that))(s => s._1.uncons match {
-      case scala.Some((a, as)) => s._2.uncons match {
-        case scala.Some((b, bs)) => scala.Some(((a, b), (as, bs)))
-        case scala.None => scala.Some(((a, b0), (as, Stream.empty)))
-      }
-      case scala.None => s._2.uncons match {
-        case scala.Some((b, bs)) =>
-          scala.Some(((a0, b), (Stream.empty, bs)))
-        case scala.None => scala.None
+      case Some((a, as)) =>
+        s._2.uncons match {
+          case Some((b, bs)) =>
+            Some(((a, b), (as, bs)))
+          case None =>
+            Some(((a, b0), (as, Stream.empty)))
+        }
+      case None => s._2.uncons match {
+        case Some((b, bs)) =>
+          Some(((a0, b), (Stream.empty, bs)))
+        case None => None
       }
     })
 
   // todo with zip and forAll
   def startsWith[A1 >: A](that: Stream[A1]): Boolean =
     Stream.unfold((this, that))(s => s._2.uncons match {
-      case scala.Some((h, t)) => s._1.uncons match {
-        case scala.Some((a, as)) =>
+      case Some((h, t)) => s._1.uncons match {
+        case Some((a, as)) =>
           if (h == a)
-            scala.Some(false, (as, t)) else scala.None
-        case _ => scala.None
+            Some(false, (as, t)) else None
+        case _ => None
       }
-      case _ => scala.Some(true, (Stream.empty, Stream.empty))
+      case _ => Some(true, (Stream.empty, Stream.empty))
     }).exists(_ == true)
 
   def tails: Stream[Stream[A]] =
     Stream.unfold(this)(s => s.uncons match {
-      case scala.Some((a, as)) => scala.Some(s, as)
-      case _ => scala.None
+      case Some((_, as)) => Some(s, as)
+      case _ => None
     }).append(Stream.empty)
 
   def hasSubsequence[A1 >: A](s1: Stream[A1],
@@ -108,12 +112,12 @@ trait Stream[+A] {
 object Stream {
   def empty[A]: Stream[A] =
     new Stream[A] {
-      def uncons = scala.None
+      def uncons = None
     }
 
   def cons[A](hd: => A, tl: => Stream[A]): Stream[A] =
     new Stream[A] {
-      lazy val uncons = scala.Some((hd, tl))
+      lazy val uncons = Some((hd, tl))
     }
 
   def apply[A](as: A*): Stream[A] =
@@ -121,16 +125,16 @@ object Stream {
     else cons(as.head, apply(as.tail: _*))
 
   def constant[A](a: A): Stream[A] =
-    Stream.unfold(a)(_ => scala.Some((a, a)))
+    Stream.unfold(a)(_ => Some((a, a)))
 
   def from(n: Int): Stream[Int] =
-    Stream.unfold(n)(a => scala.Some(a, a + 1))
+    Stream.unfold(n)(a => Some(a, a + 1))
 
   def fibs: Stream[Int] =
     Stream.unfold((0, 1))(s =>
-      scala.Some((s._1, (s._2, s._1 + s._2))))
+      Some((s._1, (s._2, s._1 + s._2))))
 
-  def unfold[A, S](z: S)(f: S => scala.Option[(A, S)]): Stream[A] =
+  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] =
     f(z).map(p => Stream.cons(p._1, unfold(p._2)(f)))
       .getOrElse(Stream.empty)
 
