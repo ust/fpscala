@@ -4,8 +4,6 @@ import lazyness.Stream
 import propertytesting.Prop._
 import state._
 
-import scala.collection.immutable
-
 case class Gen[+A](sample: State[RNG, A],
                    exhaustive: Stream[Option[A]]) {
   def flatMap[B](a: A => Gen[B]): Gen[B] =
@@ -159,6 +157,11 @@ object Prop {
   type FailedCase = String
   type SuccessCount = Int
   type Result = Either[FailedCase, (Status, SuccessCount)]
+
+  import Gen._
+
+  def check(p: => Boolean): Prop =
+    forAll(unit(()))(_ => p)
 
   def forAll[A](g: SGen[A])(f: A => Boolean): Prop = g match {
     case Sized(p) => forAll(p)(f)
