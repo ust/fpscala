@@ -1,6 +1,9 @@
 package propertytesting
 
+import java.util.concurrent.{ExecutorService, Executors}
+
 import lazyness.Stream
+import parallelism.Par.Par
 import propertytesting.Prop._
 import state._
 
@@ -18,6 +21,9 @@ case class Gen[+A](sample: State[RNG, A],
                 (f: (A, B) => C): Gen[C] =
     flatMap(a0 => b.map(f(a0, _)))
 
+  def **[B](g: Gen[B]): Gen[(A, B)] =
+    map2(g)((_, _))
+
   def listOfN(size: Gen[Int]): Gen[List[A]] =
     size.flatMap(listOfN)
 
@@ -30,6 +36,10 @@ case class Gen[+A](sample: State[RNG, A],
   def listOf1: Gen[List[A]] = listOfN(1)
 
   def unsized: SGen[A] = Unsized(this)
+}
+
+object ** {
+  def unapply[A,B](p: (A,B)) = Some(p)
 }
 
 trait SGen[+A] {
@@ -158,28 +168,6 @@ object Prop {
   type SuccessCount = Int
   type Result = Either[FailedCase, (Status, SuccessCount)]
 
-  import Gen._
-
-  def check(p: => Boolean): Prop =
-    forAll(unit(()))(_ => p)
-
-  def forAll[A](g: SGen[A])(f: A => Boolean): Prop = g match {
-    case Sized(p) => forAll(p)(f)
-    case Unsized(p) => forAll(p)(f)
-  }
-
-  def forAll[A](g: Int => Gen[A])(f: A => Boolean): Prop = Prop {
-    (max, n, rng) =>
-      val casesPerSize = n / max + 1
-      val props: List[Prop] =
-        Stream.from(0).take(max + 1)
-          .map(i => forAll(g(i))(f)).toList
-      val mapper: Prop => Prop =
-        p => Prop { (m, _, r) => p.run(m, casesPerSize, r) }
-
-      props.map(mapper).reduceLeft(_ && _).run(max, n, rng)
-  }
-
   def forAll[A](a: Gen[A])(f: A => Boolean): Prop = Prop {
     def go(i: Int, j: Int,
            s: Stream[Option[A]],
@@ -207,6 +195,38 @@ object Prop {
       }
     }
   }
+
+  def forAll[A](g: Int => Gen[A])(f: A => Boolean): Prop = Prop {
+    (max, n, rng) =>
+      val casesPerSize = n / max + 1
+      val props: List[Prop] =
+        Stream.from(0).take(max + 1)
+          .map(i => forAll(g(i))(f)).toList
+      val mapper: Prop => Prop =
+        p => Prop { (m, _, r) => p.run(m, casesPerSize, r) }
+
+      props.map(mapper).reduceLeft(_ && _).run(max, n, rng)
+  }
+
+  def forAll[A](g: SGen[A])(f: A => Boolean): Prop = g match {
+    case Sized(p) => forAll(p)(f)
+    case Unsized(p) => forAll(p)(f)
+  }
+
+  import Gen._
+
+  def check(p: => Boolean): Prop =
+    forAll(unit(()))(_ => p)
+
+  val S: Gen[ExecutorService] = weighted(
+    choose(1, 4).map(Executors.newFixedThreadPool) -> 0.75,
+    unit(Executors.newCachedThreadPool) -> 0.25)
+
+  def forAllPar[A](g: Gen[A])(f: A => Par[Boolean]): Prop =
+    forAll(S ** g) { case s ** a => f(a)(s).get }
+
+  def checkPar(p: Par[Boolean]): Prop =
+    forAllPar(Gen.unit(()))(_ => p)
 
   /** Produce an infinite random stream from a `Gen`
     * and a starting `RNG`. */

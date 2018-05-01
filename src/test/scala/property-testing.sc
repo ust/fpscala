@@ -13,27 +13,37 @@ def print[A](g: Gen[A]) =
 val rng = RNG.simple(0)
 val rng1 = RNG.simple(1245341)
 val rng2 = RNG.simple(12431)
-
 val smallInt = choose(-10, 10)
-val assertListMax: List[Int] => Boolean = l => {
+
+val ES: ExecutorService = Executors.newCachedThreadPool
+
+run(forAll(listOf(smallInt))(l => {
   val max = l.max
   !l.exists(_ > max)
-}
-val assertListSort: List[Int] => Boolean = l => {
+}))
+run(forAll(listOf1(smallInt))(l => {
+  val max = l.max
+  !l.exists(_ > max)
+}))
+run(forAll(listOf(smallInt))(l => {
   val ls = l.sorted
   ls.isEmpty || !ls.zip(ls.tail).exists { case (a, b) => a > b }
 }
-val ES: ExecutorService = Executors.newCachedThreadPool
-
-run(forAll(listOf(smallInt))(assertListMax))
-run(forAll(listOf1(smallInt))(assertListMax))
-run(forAll(listOf(smallInt))(assertListSort))
-run(forAll(unit(Par.unit(1)))(i =>
+))
+run(forAll(Gen.unit(Par.unit(1)))(i =>
   Par.map(i)(_ + 1)(ES).get == Par.unit(2)(ES).get))
 run(check {
   val p = Par.map(Par.unit(1))(_ + 1)
   val p2 = Par.unit(2)
   p(ES).get == p2(ES).get
+})
+run(check {
+  val p = Par.map(Par.unit(1))(_ + 1)
+  val p2 = Par.unit(2)
+  Par.equal(p, p2)(ES).get()
+})
+run(checkPar {
+  Par.equal(Par.map(Par.unit(1))(_ + 1), Par.unit(2))
 })
 
 print(uniform)

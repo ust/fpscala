@@ -49,6 +49,10 @@ object Par {
   def fork[A](a: => Par[A]): Par[A] =
     s => StrictFuture(s, delay(a))
 
+  def async[A](a: => A): Par[A] = fork(unit(a))
+
+  def asyncF[A, B](f: A => B): A => Par[B] = a => async(f(a))
+
   def join[A](a: Par[Par[A]]): Par[A] =
   //flatMap(a)(a => a)
     s => a(s).get()(s)
@@ -86,25 +90,15 @@ object Par {
     map2(a, product(b, product(c, product(d, e))))((l, r) =>
       f(l, r._1, r._2._1, r._2._2._1, r._2._2._2))
 
-  def fromTo[A, B, C](a: Par[A], b: Par[B])
-                     (f: (A, B) => C): Par[C] =
-    flatMap(a)(a0 => flatMap(b)(b0 => unit(f(a0, b0))))
-
-  def sequence[A](l: List[Par[A]]): Par[List[A]] =
-    l.foldRight(unit(List.empty[A]))(map2(_, _)(_ :: _))
-
-  def parMap[A, B](l: List[A])(f: A => B): Par[List[B]] =
-    fork(sequence(l.map(asyncF(f))))
-
-  def parFilter[A](l: List[A])(f: A => Boolean): Par[List[A]] =
-    map(parMap(l)(a => (a, f(a))))(_.filter(_._2).map(_._1))
-
-  def async[A](a: => A): Par[A] = fork(unit(a))
-
-  def asyncF[A, B](f: A => B): A => Par[B] = a => async(f(a))
+  def equal[A](a1: Par[A], a2: Par[A]): Par[Boolean] =
+    map2(a1, a2)(_ == _)
 
   def flatMap[A, B](a: Par[A])(f: A => Par[B]): Par[B] =
     join(map(a)(f))
+
+  def fromTo[A, B, C](a: Par[A], b: Par[B])
+                     (f: (A, B) => C): Par[C] =
+    flatMap(a)(a0 => flatMap(b)(b0 => unit(f(a0, b0))))
 
   def choiceMap[A, B](a: Par[A])(choices: Map[A, Par[B]]): Par[B] =
     flatMap(a)(choices(_))
@@ -116,7 +110,16 @@ object Par {
                                  ifFalse: Par[A]): Par[A] =
     flatMap(a)(if (_) ifTrue else ifFalse)
 
-  def sortPar(l: Par[List[Int]]): Par[List[Int]] =
+  def sequence[A](l: List[Par[A]]): Par[List[A]] =
+    l.foldRight(unit(List.empty[A]))(map2(_, _)(_ :: _))
+
+  def parMap[A, B](l: List[A])(f: A => B): Par[List[B]] =
+    fork(sequence(l.map(asyncF(f))))
+
+  def parFilter[A](l: List[A])(f: A => Boolean): Par[List[A]] =
+    map(parMap(l)(a => (a, f(a))))(_.filter(_._2).map(_._1))
+
+  def parSort(l: Par[List[Int]]): Par[List[Int]] =
     map(l)(_.sorted)
 
   def parReduce[A](as: IndexedSeq[A], a0: A)
