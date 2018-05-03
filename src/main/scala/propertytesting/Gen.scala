@@ -223,7 +223,9 @@ object Prop {
     unit(Executors.newCachedThreadPool) -> 0.25)
 
   def forAllPar[A](g: Gen[A])(f: A => Par[Boolean]): Prop =
-    forAll(S ** g) { case s ** a => f(a)(s).get }
+    forAll(S ** g ** choose(0, 4)) {
+      case s ** a ** n => f(a)(s).get
+    }
 
   def checkPar(p: Par[Boolean]): Prop =
     forAllPar(Gen.unit(()))(_ => p)

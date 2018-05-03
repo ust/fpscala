@@ -45,6 +45,17 @@ run(check {
 run(checkPar {
   Par.equal(Par.map(Par.unit(1))(_ + 1), Par.unit(2))
 })
+run(checkPar {
+  val f: Int => Int = _ * 2
+  Par.equal(Par.map(Par.unit(2))(f), Par.unit(f(2)))
+})
+run(checkPar {
+  val f: Int => Int = x => x
+  Par.equal(Par.map(Par.unit(2))(f), Par.unit(2))
+})
+run(forAllPar(smallInt.map(Par.unit(_))) {
+  i => Par.equal(i, Par.map(i)(x => x))
+})
 
 print(uniform)
 print(uniform, rng)
