@@ -3,7 +3,9 @@ package propertytesting
 import java.util.concurrent.{ExecutorService, Executors}
 
 import lazyness.Stream
+import parallelism.Par
 import parallelism.Par.Par
+import propertytesting.Gen._
 import propertytesting.Prop._
 import state._
 
@@ -12,7 +14,7 @@ case class Gen[+A](sample: State[RNG, A],
   def flatMap[B](a: A => Gen[B]): Gen[B] =
     Gen(sample.flatMap(a(_).sample),
       exhaustive.flatMap(_.map(a(_).exhaustive)
-        .getOrElse(Stream.empty)))
+        .getOrElse(unbounded)))
 
   def map[B](a: A => B): Gen[B] =
     Gen(sample.map(a), exhaustive.map(_.map(a)))
@@ -38,10 +40,6 @@ case class Gen[+A](sample: State[RNG, A],
   def unsized: SGen[A] = Unsized(this)
 }
 
-object ** {
-  def unapply[A,B](p: (A,B)) = Some(p)
-}
-
 trait SGen[+A] {
   type Size = Int
 }
@@ -57,10 +55,14 @@ object Gen {
 
   def bounded[A](a: Stream[A]): Domain[A] = a map (Some(_))
 
-  def unbounded: Domain[Nothing] = Stream(None)
+  val unbounded: Domain[Nothing] = Stream(None)
 
   def unit[A](a: => A): Gen[A] =
     Gen(State.unit(a), bounded(Stream(a)))
+
+  object ** {
+    def unapply[A, B](p: (A, B)) = Some(p)
+  }
 
   def randomListOf[A](a: Gen[A]): Gen[List[A]] =
     a.listOfN(choose(0, 11))
@@ -80,7 +82,7 @@ object Gen {
       if (p * (g1._2 + g2._2) < g1._2) g1._1 else g2._1)
 
   /** Between 0 and 1, not including 1. */
-  def uniform: Gen[Double] = Gen(RNG.double, unbounded)
+  val uniform: Gen[Double] = Gen(RNG.double, unbounded)
 
   /** Between `i` and `j`, not including `j`. */
   def choose(i: Double, j: Double): Gen[Double] =
@@ -94,13 +96,13 @@ object Gen {
     Gen(s, d)
   }
 
-  def boolean: Gen[Boolean] = choose(0, 2).map(_ == 1)
+  val boolean: Gen[Boolean] = choose(0, 2).map(_ == 1)
 
-  def short: Gen[Short] =
+  val short: Gen[Short] =
     choose(Short.MinValue.toInt, Short.MaxValue.toInt)
       .map(_.toShort)
 
-  def integer: Gen[Int] = choose(Int.MinValue, Int.MaxValue)
+  val integer: Gen[Int] = choose(Int.MinValue, Int.MaxValue)
 
   def sameParity(from: Int, to: Int): Gen[(Int, Int)] = {
     val g = choose(from, to)
@@ -114,10 +116,10 @@ object Gen {
 
   val charList: Seq[Char] = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
 
-  def character: Gen[Char] =
+  val character: Gen[Char] =
     choose(0, charList.size).map(charList(_))
 
-  def string: Gen[String] =
+  val string: Gen[String] =
     randomListOf(character).map(_.mkString)
 }
 
@@ -222,10 +224,22 @@ object Prop {
     choose(1, 4).map(Executors.newFixedThreadPool) -> 0.75,
     unit(Executors.newCachedThreadPool) -> 0.25)
 
-  def forAllPar[A](g: Gen[A])(f: A => Par[Boolean]): Prop =
-    forAll(S ** g ** choose(0, 4)) {
-      case s ** a ** n => f(a)(s).get
+  def forAllPar[A](g: Gen[A])(f: A => Par[Boolean]): Prop = {
+    def go(n: Int, p: Par[Boolean]): Par[Boolean] = {
+      println(s"go:$n") // FIXME close threads
+      if (n < 1) p else Par.fork(p)
     }
+
+    forAll(S ** g ** choose(1, 4)) {
+      case s ** a ** n => go(n, f(a))(s).get
+    }
+    //    val pair: Gen[(ExecutorService, A)] = S ** g
+    //    val xxx: ((ExecutorService, A)) => Boolean = {
+    //      case s ** a => f(a)(s).get
+    //    }
+    //    forAll(pair)(xxx)
+
+  }
 
   def checkPar(p: Par[Boolean]): Prop =
     forAllPar(Gen.unit(()))(_ => p)

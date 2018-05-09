@@ -1,3 +1,5 @@
+import parallelism.Par
+import propertytesting.Prop.{checkPar, forAllPar, run}
 import propertytesting.{Gen, Prop}
 import state.RNG
 
@@ -6,17 +8,13 @@ object JustRunner {
 
     val rng1 = RNG.simple(1245341)
 
-    val smallInt = Gen.choose(-10, 10)
 
-    val assertListSort: List[Int] => Boolean = l => {
-      val ls = l.sorted
-      l.isEmpty || !ls.zip(ls.tail).exists { case (a, b) => a > b }
-    }
+    run(forAllPar(Gen.unit(1)) {
+      i => Par.equal(Par.unit(2), Par.unit(2))
+    }, rng = rng1)
 
-
-    Prop.run(Prop.forAll(Gen.listOf(smallInt))(assertListSort),
-      maxSize = 2, testCases = 1, rng = rng1)
-
-
+//    Gen.unit(2).exhaustive
+//    val pair = Gen.unit(1) ** Gen.unit(2)
+//    pair.exhaustive
   }
 }
