@@ -6,16 +6,15 @@ import propertytesting.Prop._
 import propertytesting._
 import state._
 
-def print[A](s: State[RNG, A], l: RNG) = s.run(l)._1
-def print[A](g: Gen[A], l: RNG) = g.sample.run(l)._1
-def print[A](g: Gen[A]) =
-  g.exhaustive.filter(_.isDefined).map(_.get).toList
 val rng = RNG.simple(0)
 val rng1 = RNG.simple(1245341)
 val rng2 = RNG.simple(12431)
 val smallInt = choose(-10, 10)
-
 val ES: ExecutorService = Executors.newCachedThreadPool
+
+def sample[A](g: Gen[A], l: RNG = rng) = g.sample.run(l)._1
+def exhaustive[A](g: Gen[A]) =
+  g.exhaustive.filter(_.isDefined).map(_.get).toList
 
 run(forAll(listOf(smallInt))(l => {
   val max = l.max
@@ -56,43 +55,54 @@ run(checkPar {
 run(forAllPar(smallInt.map(Par.unit(_))) {
   i => Par.equal(i, Par.map(i)(x => x))
 })
+run(forAllPar(integer) {
+  i => Par.equal(Par.unit(i), Par.fork(Par.unit(i)))
+})
+run(forAll(listOf(integer)){
+  l => true
+})
+// TODO gen A => B
+// TODO SGen
+// TODO genTree
+// TODO sequence
+sample(genIntFn(integer), rng1)("hui")
+sample(genIntFn(integer), rng1)("zhopa")
+exhaustive(uniform)
+sample(uniform, rng)
+sample(uniform, rng1)
+sample(uniform, rng2)
+exhaustive(choose(-12.2, 5.89))
+sample(choose(-12.2, 5.89), rng)
+sample(choose(-12.2, 5.89), rng1)
+sample(choose(-12.2, 5.89), rng2)
+exhaustive(choose(-3, 5))
+sample(choose(-3, 5), rng1)
+exhaustive(boolean)
+sample(boolean, rng)
+sample(boolean, rng1)
+exhaustive(choose(1, 1).listOfN(2))
+exhaustive(choose(1, 2).listOfN(2))
+exhaustive(choose(1, 4).listOfN(1))
+exhaustive(choose(1, 3).listOfN(2))
+exhaustive(choose(1, 3).listOfN(3))
+exhaustive(choose(1, 4).listOfN(2))
+exhaustive(choose(1, 3).listOfN(0))
+sample(choose(1, 3).listOfN(2), rng1)
+exhaustive(sameParity(1, 4))
+sample(randomListOf(choose(1, 6)), rng1)
+sample(randomListOf(character), rng1)
+sample(integer, rng2)
+sample(character, rng2)
+sample(short, rng2)
+sample(string, rng2)
+sample(union(choose(0, 3), choose(3, 5)), rng)
 
-print(uniform)
-print(uniform, rng)
-print(uniform, rng1)
-print(uniform, rng2)
-print(choose(-12.2, 5.89))
-print(choose(-12.2, 5.89), rng)
-print(choose(-12.2, 5.89), rng1)
-print(choose(-12.2, 5.89), rng2)
-print(choose(-3, 5))
-print(choose(-3, 5), rng1)
-print(boolean)
-print(boolean, rng)
-print(boolean, rng1)
-print(choose(1, 1).listOfN(2))
-print(choose(1, 2).listOfN(2))
-print(choose(1, 4).listOfN(1))
-print(choose(1, 3).listOfN(2))
-print(choose(1, 3).listOfN(3))
-print(choose(1, 4).listOfN(2))
-print(choose(1, 3).listOfN(0))
-print(choose(1, 3).listOfN(2), rng1)
-print(sameParity(1, 4))
-print(randomListOf(choose(1, 6)), rng1)
-print(randomListOf(character), rng1)
-print(integer, rng2)
-print(character, rng2)
-print(short, rng2)
-print(string, rng2)
-print(union(choose(0, 3), choose(3, 5)), rng)
-
-print(weighted((choose(0, 5), 0.5),
+sample(weighted((choose(0, 5), 0.5),
   (choose(5, 10), 0.5)), rng2)
-print(weighted((choose(0, 5), 0.3),
+sample(weighted((choose(0, 5), 0.3),
   (choose(5, 10), 0.7)), rng2)
-print(union(choose(0, 3), choose(3, 5)), rng1)
-print(union(choose(0, 3), choose(3, 6)))
+sample(union(choose(0, 3), choose(3, 5)), rng1)
+exhaustive(union(choose(0, 3), choose(3, 6)))
 
 
 

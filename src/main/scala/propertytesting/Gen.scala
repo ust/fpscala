@@ -67,11 +67,9 @@ object Gen {
   def randomListOf[A](a: Gen[A]): Gen[List[A]] =
     a.listOfN(choose(0, 11))
 
-  def listOf1[A](g: Gen[A]): SGen[List[A]] =
-    Sized(_ => g.listOfN(1))
+  def listOf1[A](g: Gen[A]): SGen[List[A]] = Sized(_ => g.listOfN(1))
 
-  def listOf[A](g: Gen[A]): SGen[List[A]] =
-    Sized(n => g.listOfN(n))
+  def listOf[A](g: Gen[A]): SGen[List[A]] = Sized(n => g.listOfN(n))
 
   def union[A](g1: Gen[A], g2: Gen[A]): Gen[A] =
     boolean.flatMap(if (_) g2 else g1)
@@ -121,6 +119,9 @@ object Gen {
 
   val string: Gen[String] =
     randomListOf(character).map(_.mkString)
+
+  def genIntFn[A](g: Gen[Int]): Gen[A => Int] = g.map(_ => _.hashCode)
+
 }
 
 trait Status {
@@ -226,19 +227,13 @@ object Prop {
 
   def forAllPar[A](g: Gen[A])(f: A => Par[Boolean]): Prop = {
     def go(n: Int, p: Par[Boolean]): Par[Boolean] = {
-      println(s"go:$n") // FIXME close threads
+      //println(s"go:$n") // FIXME close threads
       if (n < 1) p else Par.fork(p)
     }
 
     forAll(S ** g ** choose(1, 4)) {
       case s ** a ** n => go(n, f(a))(s).get
     }
-    //    val pair: Gen[(ExecutorService, A)] = S ** g
-    //    val xxx: ((ExecutorService, A)) => Boolean = {
-    //      case s ** a => f(a)(s).get
-    //    }
-    //    forAll(pair)(xxx)
-
   }
 
   def checkPar(p: Par[Boolean]): Prop =
