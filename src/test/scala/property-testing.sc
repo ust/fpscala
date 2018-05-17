@@ -10,9 +10,11 @@ val rng = RNG.simple(0)
 val rng1 = RNG.simple(1245341)
 val rng2 = RNG.simple(12431)
 val smallInt = choose(-10, 10)
-val ES: ExecutorService = Executors.newCachedThreadPool
+val ES: ExecutorService =
+  Executors.newCachedThreadPool
 
-def sample[A](g: Gen[A], l: RNG = rng) = g.sample.run(l)._1
+def sample[A](g: Gen[A], l: RNG = rng) =
+  g.sample.run(l)._1
 def exhaustive[A](g: Gen[A]) =
   g.exhaustive.filter(_.isDefined).map(_.get).toList
 
@@ -26,7 +28,9 @@ run(forAll(listOf1(smallInt))(l => {
 }))
 run(forAll(listOf(smallInt))(l => {
   val ls = l.sorted
-  ls.isEmpty || !ls.zip(ls.tail).exists { case (a, b) => a > b }
+  ls.isEmpty || !ls.zip(ls.tail).exists {
+    case (a, b) => a > b
+  }
 }
 ))
 run(forAll(Gen.unit(Par.unit(1)))(i =>
@@ -58,9 +62,15 @@ run(forAllPar(smallInt.map(Par.unit(_))) {
 run(forAllPar(integer) {
   i => Par.equal(Par.unit(i), Par.fork(Par.unit(i)))
 })
-run(forAll(listOf(integer)){
-  l => true
+run(forAll {
+  val fn: (Int => Int) => (Int => Boolean) = x => x(_) < 0
+  randomListOf(integer) **
+    genIntFn[Int](integer).map(fn)
+} {
+  case l ** f => l.takeWhile(f).forall(f)
 })
+"^^^^^^^^ you are here ^^^^^^^"
+// TODO take, drop, filter, unfold
 // TODO gen A => B
 // TODO SGen
 // TODO genTree

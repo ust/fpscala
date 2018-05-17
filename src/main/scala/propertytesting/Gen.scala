@@ -122,6 +122,8 @@ object Gen {
 
   def genIntFn[A](g: Gen[Int]): Gen[A => Int] = g.map(_ => _.hashCode)
 
+  def genFn[A, B](g: Gen[Int])(f: Int => B): Gen[A => B] =
+    ??? // genFnInt(g).map(a => f(a(_)))
 }
 
 trait Status {
