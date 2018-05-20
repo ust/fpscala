@@ -120,10 +120,11 @@ object Gen {
   val string: Gen[String] =
     randomListOf(character).map(_.mkString)
 
-  def genIntFn[A](g: Gen[Int]): Gen[A => Int] = g.map(_ => _.hashCode)
+  def genIntFn[A](g: Gen[Int]): Gen[A => Int] =
+    g.map(i => a => (i + a.hashCode).hashCode)
 
   def genFn[A, B](g: Gen[Int])(f: Int => B): Gen[A => B] =
-    ??? // genFnInt(g).map(a => f(a(_)))
+    genIntFn[A](g).map(ai => a => f(ai(a)))
 }
 
 trait Status {

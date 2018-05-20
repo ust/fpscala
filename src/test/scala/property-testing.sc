@@ -76,7 +76,10 @@ run(forAll {
 // TODO genTree
 // TODO sequence
 sample(genIntFn(integer), rng1)("hui")
+sample(genIntFn(integer), rng2)("hui")
 sample(genIntFn(integer), rng1)("zhopa")
+sample(genIntFn(integer), rng2)("zhopa")
+sample(genFn(integer)(_.toString), rng1)("zhopa")
 exhaustive(uniform)
 sample(uniform, rng)
 sample(uniform, rng1)
