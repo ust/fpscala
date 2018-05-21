@@ -63,14 +63,26 @@ run(forAllPar(integer) {
   i => Par.equal(Par.unit(i), Par.fork(Par.unit(i)))
 })
 run(forAll {
-  val fn: (Int => Int) => (Int => Boolean) = x => x(_) < 0
-  randomListOf(integer) **
-    genIntFn[Int](integer).map(fn)
+  randListOf(integer) ** genFn(smallInt)(_ < 0)
 } {
   case l ** f => l.takeWhile(f).forall(f)
 })
+run(forAll(randListOf(integer) ** genFn(smallInt)(_ < 0)) {
+  case l ** f => l.takeWhile(f) ++ l.dropWhile(f) == l
+})
+run(forAll(randListOf(integer) ** integer) {
+  case l ** i =>
+    val n = l.size / 2
+    l.take(n) ++ l.drop(n) == l
+})
+run(forAll(randListOf(integer) ** genFn(smallInt)(_ < 0)) {
+  case l ** f => l.filter(f).sorted.forall(f)
+})
+run(forAll(randListOf(integer) ** genFn(smallInt)(_ < 0)) {
+  case l ** f => true // unfold??
+})
 "^^^^^^^^ you are here ^^^^^^^"
-// TODO take, drop, filter, unfold
+// TODO unfold
 // TODO gen A => B
 // TODO SGen
 // TODO genTree
@@ -102,8 +114,8 @@ exhaustive(choose(1, 4).listOfN(2))
 exhaustive(choose(1, 3).listOfN(0))
 sample(choose(1, 3).listOfN(2), rng1)
 exhaustive(sameParity(1, 4))
-sample(randomListOf(choose(1, 6)), rng1)
-sample(randomListOf(character), rng1)
+sample(randListOf(choose(1, 6)), rng1)
+sample(randListOf(character), rng1)
 sample(integer, rng2)
 sample(character, rng2)
 sample(short, rng2)

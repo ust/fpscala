@@ -64,7 +64,7 @@ object Gen {
     def unapply[A, B](p: (A, B)) = Some(p)
   }
 
-  def randomListOf[A](a: Gen[A]): Gen[List[A]] =
+  def randListOf[A](a: Gen[A]): Gen[List[A]] =
     a.listOfN(choose(0, 11))
 
   def listOf1[A](g: Gen[A]): SGen[List[A]] = Sized(_ => g.listOfN(1))
@@ -118,13 +118,13 @@ object Gen {
     choose(0, charList.size).map(charList(_))
 
   val string: Gen[String] =
-    randomListOf(character).map(_.mkString)
+    randListOf(character).map(_.mkString)
 
-  def genIntFn[A](g: Gen[Int]): Gen[A => Int] =
-    g.map(i => a => (i + a.hashCode).hashCode)
+  def genIntFn[A](g: Gen[Any]): Gen[A => Int] =
+    g.map(g => a => (g.hashCode + a.hashCode).hashCode)
 
-  def genFn[A, B](g: Gen[Int])(f: Int => B): Gen[A => B] =
-    genIntFn[A](g).map(ai => a => f(ai(a)))
+  def genFn[A, B](g: Gen[Any])(f: Int => B): Gen[A => B] =
+    genIntFn[A](g).map(i => a => f(i(a)))
 }
 
 trait Status {
