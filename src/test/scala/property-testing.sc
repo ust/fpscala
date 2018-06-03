@@ -1,5 +1,6 @@
 import java.util.concurrent.{ExecutorService, Executors}
 
+import lazyness._
 import parallelism._
 import propertytesting.Gen._
 import propertytesting.Prop._
@@ -59,39 +60,42 @@ run(checkPar {
 run(forAllPar(smallInt.map(Par.unit(_))) {
   i => Par.equal(i, Par.map(i)(x => x))
 })
-run(forAllPar(integer) {
+run(forAllPar(int) {
   i => Par.equal(Par.unit(i), Par.fork(Par.unit(i)))
 })
 run(forAll {
-  randListOf(integer) ** genFn(smallInt)(_ < 0)
+  randListOf(int) ** genFn(smallInt)(_ < 0)
 } {
   case l ** f => l.takeWhile(f).forall(f)
 })
-run(forAll(randListOf(integer) ** genFn(smallInt)(_ < 0)) {
+run("take")(forAll(randListOf(int) ** genFn(smallInt)(_ < 0)) {
   case l ** f => l.takeWhile(f) ++ l.dropWhile(f) == l
 })
-run(forAll(randListOf(integer) ** integer) {
+run("take")(forAll(randListOf(int) ** int) {
   case l ** i =>
     val n = l.size / 2
     l.take(n) ++ l.drop(n) == l
 })
-run(forAll(randListOf(integer) ** genFn(smallInt)(_ < 0)) {
+run("sorted")(forAll(randListOf(int) ** genFn(smallInt)(_ < 0)) {
   case l ** f => l.filter(f).sorted.forall(f)
 })
-run(forAll(randListOf(integer) ** genFn(smallInt)(_ < 0)) {
-  case l ** f => true // unfold??
+run("unfold")(forAll {
+  int ** genFn(int)(_ % 3 != 0) ** genFn(int)(_ ^ 2)
+} { case z ** ofn ** sfn =>
+  val fn: Int => Option[(Int, Int)] = s =>
+    if (ofn(s)) Some((s, sfn(s))) else None
+
+  Stream.unfold(z)(fn).toList.forall(ofn)
 })
 "^^^^^^^^ you are here ^^^^^^^"
-// TODO unfold
-// TODO gen A => B
-// TODO SGen
 // TODO genTree
+// TODO SGen
 // TODO sequence
-sample(genIntFn(integer), rng1)("hui")
-sample(genIntFn(integer), rng2)("hui")
-sample(genIntFn(integer), rng1)("zhopa")
-sample(genIntFn(integer), rng2)("zhopa")
-sample(genFn(integer)(_.toString), rng1)("zhopa")
+sample(genIntFn(int), rng1)("hui")
+sample(genIntFn(int), rng2)("hui")
+sample(genIntFn(int), rng1)("zhopa")
+sample(genIntFn(int), rng2)("zhopa")
+sample(genFn(int)(_.toString), rng1)("zhopa")
 exhaustive(uniform)
 sample(uniform, rng)
 sample(uniform, rng1)
@@ -115,9 +119,9 @@ exhaustive(choose(1, 3).listOfN(0))
 sample(choose(1, 3).listOfN(2), rng1)
 exhaustive(sameParity(1, 4))
 sample(randListOf(choose(1, 6)), rng1)
-sample(randListOf(character), rng1)
-sample(integer, rng2)
-sample(character, rng2)
+sample(randListOf(char), rng1)
+sample(int, rng2)
+sample(char, rng2)
 sample(short, rng2)
 sample(string, rng2)
 sample(union(choose(0, 3), choose(3, 5)), rng)
@@ -128,6 +132,3 @@ sample(weighted((choose(0, 5), 0.3),
   (choose(5, 10), 0.7)), rng2)
 sample(union(choose(0, 3), choose(3, 5)), rng1)
 exhaustive(union(choose(0, 3), choose(3, 6)))
-
-
-

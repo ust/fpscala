@@ -100,7 +100,7 @@ object Gen {
     choose(Short.MinValue.toInt, Short.MaxValue.toInt)
       .map(_.toShort)
 
-  val integer: Gen[Int] = choose(Int.MinValue, Int.MaxValue)
+  val int: Gen[Int] = choose(Int.MinValue, Int.MaxValue)
 
   def sameParity(from: Int, to: Int): Gen[(Int, Int)] = {
     val g = choose(from, to)
@@ -114,11 +114,11 @@ object Gen {
 
   val charList: Seq[Char] = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
 
-  val character: Gen[Char] =
+  val char: Gen[Char] =
     choose(0, charList.size).map(charList(_))
 
   val string: Gen[String] =
-    randListOf(character).map(_.mkString)
+    randListOf(char).map(_.mkString)
 
   def genIntFn[A](g: Gen[Any]): Gen[A => Int] =
     g.map(g => a => (g.hashCode + a.hashCode).hashCode)
@@ -252,20 +252,26 @@ object Prop {
       "generated an exception: " + e.getMessage + "\n" +
       "stack trace:\n" + e.getStackTrace.mkString("\n")
 
-  def run(p: Prop,
-          maxSize: MaxSize = 100,
-          testCases: TestCases = 100,
-          rng: RNG = RNG.simple(System.currentTimeMillis)): Unit = {
+  def run(p: Prop): Unit = run()(p)
+
+  def run(description: String = "")(
+    p: Prop,
+    maxSize: MaxSize = 100,
+    testCases: TestCases = 100,
+    rng: RNG = RNG.simple(System.currentTimeMillis),
+  ): Unit = {
+    val desc = s""""$description""""
     p.run(maxSize, testCases, rng) match {
-      case Left(msg) => println("! test failed:\n" + msg)
+      case Left(msg) =>
+        println(s"$desc test failed:$msg")
       case Right((Unfalsified, n)) =>
-        println("+ property unfalsified, ran " + n + " tests")
+        println(s"+ property $desc unfalsified, ran $n tests")
       case Right((Proven, n)) =>
-        println("+ property proven, ran " + n + " tests")
+        println(s"+ property $desc proven, ran $n tests")
       case Right((Exhausted, n)) =>
-        println("+ property unfalsified up to max size, ran " +
-          n + " tests")
-      case r => println("Unexpected state: " + r)
+        println(s"+ property $desc unfalsified up to max size, ran $n tests")
+      case r =>
+        println(s" $desc Unexpected state: $r")
     }
   }
 

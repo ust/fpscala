@@ -112,7 +112,7 @@ trait Stream[+A] {
 object Stream {
   def empty[A]: Stream[A] =
     new Stream[A] {
-      def uncons = None
+      def uncons: Option[(A, Stream[A])] = None
     }
 
   def cons[A](hd: => A, tl: => Stream[A]): Stream[A] =
@@ -135,7 +135,7 @@ object Stream {
       Some((s._1, (s._2, s._1 + s._2))))
 
   def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] =
-    f(z).map(p => Stream.cons(p._1, unfold(p._2)(f)))
+    f(z).map { case (a, s) => Stream.cons(a, unfold(s)(f)) }
       .getOrElse(Stream.empty)
 
 }
