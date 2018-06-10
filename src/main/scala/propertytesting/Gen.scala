@@ -40,17 +40,14 @@ case class Gen[+A](sample: State[RNG, A],
   def unsized: SGen[A] = Unsized(this)
 }
 
-trait SGen[+A] {
-  type Size = Int
-}
+trait SGen[+A] {}
 
-case class Sized[+A](forSize: Int => Gen[A]) extends SGen[A] {
-
-}
+case class Sized[+A](forSize: Size => Gen[A]) extends SGen[A] {}
 
 case class Unsized[+A](get: Gen[A]) extends SGen[A]
 
 object Gen {
+  type Size = Int
   type Domain[+A] = Stream[Option[A]]
 
   def bounded[A](a: Stream[A]): Domain[A] = a map (Some(_))
@@ -62,6 +59,11 @@ object Gen {
 
   object ** {
     def unapply[A, B](p: (A, B)) = Some(p)
+  }
+
+  def map[A, B](g: SGen[A])(f: A => B): SGen[B] = g match {
+    case Unsized(u) => Unsized(u.map(f))
+    case Sized(s) => Sized(s(_).map(f))
   }
 
   def randListOf[A](a: Gen[A]): Gen[List[A]] =
@@ -156,6 +158,7 @@ case class Prop(run: (MaxSize, TestCases, RNG) => Result) {
     }
   }
 
+  // fixme exhausted
   def ||(p: Prop): Prop = Prop { (m, t, rng) =>
     run(m, t, rng) match {
       case r@Right(_) => r
@@ -214,9 +217,9 @@ object Prop {
       props.map(mapper).reduceLeft(_ && _).run(max, n, rng)
   }
 
-  def forAll[A](g: SGen[A])(f: A => Boolean): Prop = g match {
-    case Sized(p) => forAll(p)(f)
-    case Unsized(p) => forAll(p)(f)
+  def forAll[A](s: SGen[A])(p: A => Boolean): Prop = s match {
+    case Sized(f) => forAll(f)(p)
+    case Unsized(g) => forAll(g)(p)
   }
 
   import Gen._

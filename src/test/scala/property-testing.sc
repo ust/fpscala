@@ -87,8 +87,13 @@ run("unfold")(forAll {
 
   Stream.unfold(z)(fn).toList.forall(ofn)
 })
-"^^^^^^^^ you are here ^^^^^^^"
 // TODO genTree
+import datastructures.Tree
+def tree[A](g: SGen[A])(f: A => Tree[A]): SGen[Tree[A]] =
+  Gen.map(g)(f)
+
+
+"^^^^^^^^ you are here ^^^^^^^"
 // TODO SGen
 // TODO sequence
 sample(genIntFn(int), rng1)("hui")
