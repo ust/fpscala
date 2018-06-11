@@ -89,8 +89,8 @@ run("unfold")(forAll {
 })
 // TODO genTree
 import datastructures.Tree
-def tree[A](g: SGen[A])(f: A => Tree[A]): SGen[Tree[A]] =
-  Gen.map(g)(f)
+def tree[A](g: SGen[A])(f: Gen[A => Tree[A]]): SGen[Tree[A]] =
+  Gen.flatMap(g)(???)
 
 
 "^^^^^^^^ you are here ^^^^^^^"

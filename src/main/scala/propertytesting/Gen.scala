@@ -61,6 +61,12 @@ object Gen {
     def unapply[A, B](p: (A, B)) = Some(p)
   }
 
+  def flatMap[A, B](g: SGen[A])(f: A => SGen[B]): SGen[B] =
+    g match {
+      case Unsized(u) => ???
+      case _ => ???
+    }
+
   def map[A, B](g: SGen[A])(f: A => B): SGen[B] = g match {
     case Unsized(u) => Unsized(u.map(f))
     case Sized(s) => Sized(s(_).map(f))
