@@ -26,9 +26,6 @@ case class Gen[+A](sample: State[RNG, A],
   def **[B](g: Gen[B]): Gen[(A, B)] =
     map2(g)((_, _))
 
-  def listOfN(size: Gen[Int]): Gen[List[A]] =
-    size.flatMap(listOfN)
-
   def listOfN(n: Int): Gen[List[A]] = n match {
     case 0 => map(_ => Nil)
     case 1 => map(_ :: Nil)
@@ -37,12 +34,18 @@ case class Gen[+A](sample: State[RNG, A],
 
   def listOf1: Gen[List[A]] = listOfN(1)
 
-  def unsized: SGen[A] = Unsized(this)
+  def listOf: SGen[A] = Gen.sized(this)
+
+  def unsized: SGen[A] = Gen.unsized(this)
 }
 
-trait SGen[+A] {}
+trait SGen[+A] {
+  def map[B](f: A => B): SGen[B] = Gen.map(this)(f)
 
-case class Sized[+A](forSize: Size => Gen[A]) extends SGen[A] {}
+  def flatMap[B](f: A => SGen[B]): SGen[B] = Gen.flatMap(this)(f)
+}
+
+case class Sized[+A](forSize: Size => Gen[A]) extends SGen[A]
 
 case class Unsized[+A](get: Gen[A]) extends SGen[A]
 
@@ -61,6 +64,10 @@ object Gen {
     def unapply[A, B](p: (A, B)) = Some(p)
   }
 
+  def sized[A](g: Gen[A]): SGen[A] = Sized(_ => g)
+
+  def unsized[A](g: Gen[A]): SGen[A] = Unsized(g)
+
   def flatMap[A, B](g: SGen[A])(f: A => SGen[B]): SGen[B] =
     g match {
       case Unsized(u) => ???
@@ -73,7 +80,7 @@ object Gen {
   }
 
   def randListOf[A](a: Gen[A]): Gen[List[A]] =
-    a.listOfN(choose(0, 11))
+    choose(0, 11).flatMap(a.listOfN)
 
   def listOf1[A](g: Gen[A]): SGen[List[A]] = Sized(_ => g.listOfN(1))
 
@@ -136,7 +143,9 @@ object Gen {
 }
 
 trait Status {
-  def min(s: Status): Status = Status.min(this, s)
+  def <(s: Status): Status = Status.min(this, s)
+
+  def >(s: Status): Status = Status.min(s, this)
 }
 
 case object Proven extends Status
@@ -157,7 +166,7 @@ case class Prop(run: (MaxSize, TestCases, RNG) => Result) {
     run(m, t, rng) match {
       case Right((s1, c1)) => p.run(m, t, rng) match {
         case Right((s2, c2)) =>
-          Right((s1 min s2, c1 + c2))
+          Right((s1 < s2, c1 + c2))
         case failed => failed
       }
       case failed => failed
@@ -184,14 +193,16 @@ object Prop {
   type Result = Either[FailedCase, (Status, SuccessCount)]
 
   def forAll[A](a: Gen[A])(f: A => Boolean): Prop = Prop {
-    def go(i: Int, j: Int,
+    def go(i: Int,
+           j: Int,
+           max: MaxSize,
            s: Stream[Option[A]],
-           onEnd: Int => Result): Result =
+           onEnd: SuccessCount => Result): Result =
       if (i == j) Right((Unfalsified, i))
       else s.uncons match {
         case Some((Some(h), t)) =>
           try {
-            if (f(h)) go(i + 1, j, t, onEnd) // maybe s->t ?
+            if (f(h)) go(i + 1, j, max, t, onEnd) // maybe s->t ?
             else Left(h.toString)
           }
           catch {
@@ -201,11 +212,11 @@ object Prop {
         case None => onEnd(i)
       }
 
-    (_, n, rng) => {
-      go(0, n / 3, a.exhaustive, i => Right((Proven, i))) match {
+    (m, n, rng) => {
+      go(0, n / 3, m, a.exhaustive, i => Right((Proven, i))) match {
         case Right((Unfalsified, _)) =>
           val rands = randomStream(a)(rng).map(Some(_))
-          go(n / 3, n, rands, i => Right((Unfalsified, i)))
+          go(n / 3, n, m, rands, i => Right((Unfalsified, i)))
         case s => s
       }
     }
@@ -223,9 +234,9 @@ object Prop {
       props.map(mapper).reduceLeft(_ && _).run(max, n, rng)
   }
 
-  def forAll[A](s: SGen[A])(p: A => Boolean): Prop = s match {
-    case Sized(f) => forAll(f)(p)
-    case Unsized(g) => forAll(g)(p)
+  def forAll[A](g: SGen[A])(p: A => Boolean): Prop = g match {
+    case Sized(u) => forAll(u)(p)
+    case Unsized(s) => forAll(s)(p)
   }
 
   import Gen._
@@ -278,7 +289,7 @@ object Prop {
       case Right((Proven, n)) =>
         println(s"+ property $desc proven, ran $n tests")
       case Right((Exhausted, n)) =>
-        println(s"+ property $desc unfalsified up to max size, ran $n tests")
+        println(s"+ property $desc exhausted up to max size, ran $n tests")
       case r =>
         println(s" $desc Unexpected state: $r")
     }
