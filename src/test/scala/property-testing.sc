@@ -68,27 +68,34 @@ run(forAll {
 } {
   case l ** f => l.takeWhile(f).forall(f)
 })
-run("take")(forAll(randListOf(int) ** genFn(smallInt)(_ < 0)) {
-  case l ** f => l.takeWhile(f) ++ l.dropWhile(f) == l
-})
+run("take") {
+  forAll(randListOf(int) ** genFn(smallInt)(_ < 0)) {
+    case l ** f => l.takeWhile(f) ++ l.dropWhile(f) == l
+  }
+}
 run("take")(forAll(randListOf(int) ** int) {
   case l ** i =>
     val n = l.size / 2
     l.take(n) ++ l.drop(n) == l
 })
-run("sorted")(forAll(randListOf(int) ** genFn(smallInt)(_ < 0)) {
-  case l ** f => l.filter(f).sorted.forall(f)
-})
-run("unfold")(forAll {
-  int ** genFn(int)(_ % 3 != 0) ** genFn(int)(_ ^ 2)
-} { case z ** ofn ** sfn =>
-  val fn: Int => Option[(Int, Int)] = s =>
-    if (ofn(s)) Some((s, sfn(s))) else None
+run("sorted") {
+  forAll(randListOf(int) ** genFn(smallInt)(_ < 0)) {
+    case l ** f => l.filter(f).sorted.forall(f)
+  }
+}
+run("unfold") {
+  forAll {
+    int ** genFn(int)(_ % 3 != 0) ** genFn(int)(_ ^ 2)
+  } { case z ** ofn ** sfn =>
+    val fn: Int => Option[(Int, Int)] = s =>
+      if (ofn(s)) Some((s, sfn(s))) else None
 
-  Stream.unfold(z)(fn).toList.forall(ofn)
-})
+    Stream.unfold(z)(fn).toList.forall(ofn)
+  }
+}
 // TODO genTree
 import datastructures.Tree
+
 def tree[A](g: SGen[A])(f: Gen[A => Tree[A]]): SGen[Tree[A]] =
   Gen.flatMap(g)(???)
 

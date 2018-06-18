@@ -43,11 +43,17 @@ trait SGen[+A] {
   def map[B](f: A => B): SGen[B] = Gen.map(this)(f)
 
   def flatMap[B](f: A => SGen[B]): SGen[B] = Gen.flatMap(this)(f)
+
+  def gen: Gen[A]
 }
 
-case class Sized[+A](forSize: Size => Gen[A]) extends SGen[A]
+case class Sized[+A](forSize: Size => Gen[A]) extends SGen[A] {
+  override def gen: Gen[A] = forSize(1)
+}
 
-case class Unsized[+A](get: Gen[A]) extends SGen[A]
+case class Unsized[+A](get: Gen[A]) extends SGen[A] {
+  override def gen: Gen[A] = get
+}
 
 object Gen {
   type Size = Int
@@ -70,14 +76,15 @@ object Gen {
 
   def flatMap[A, B](g: SGen[A])(f: A => SGen[B]): SGen[B] =
     g match {
-      case Unsized(u) => ???
-      case _ => ???
+      case Unsized(u) => Unsized(u.flatMap(a => f(a).gen))
+      case Sized(s) => Sized(s(_).flatMap(a => f(a).gen))
     }
 
-  def map[A, B](g: SGen[A])(f: A => B): SGen[B] = g match {
-    case Unsized(u) => Unsized(u.map(f))
-    case Sized(s) => Sized(s(_).map(f))
-  }
+  def map[A, B](g: SGen[A])(f: A => B): SGen[B] =
+    g match {
+      case Unsized(u) => Unsized(u.map(f))
+      case Sized(s) => Sized(s(_).map(f))
+    }
 
   def randListOf[A](a: Gen[A]): Gen[List[A]] =
     choose(0, 11).flatMap(a.listOfN)
@@ -193,16 +200,16 @@ object Prop {
   type Result = Either[FailedCase, (Status, SuccessCount)]
 
   def forAll[A](a: Gen[A])(f: A => Boolean): Prop = Prop {
-    def go(i: Int,
+    def go(max: MaxSize,
+           i: Int,
            j: Int,
-           max: MaxSize,
            s: Stream[Option[A]],
            onEnd: SuccessCount => Result): Result =
       if (i == j) Right((Unfalsified, i))
       else s.uncons match {
         case Some((Some(h), t)) =>
           try {
-            if (f(h)) go(i + 1, j, max, t, onEnd) // maybe s->t ?
+            if (f(h)) go(max, i + 1, j, t, onEnd) // maybe s->t ?
             else Left(h.toString)
           }
           catch {
@@ -213,10 +220,10 @@ object Prop {
       }
 
     (m, n, rng) => {
-      go(0, n / 3, m, a.exhaustive, i => Right((Proven, i))) match {
+      go(m, 0, n / 3, a.exhaustive, i => Right((Proven, i))) match {
         case Right((Unfalsified, _)) =>
           val rands = randomStream(a)(rng).map(Some(_))
-          go(n / 3, n, m, rands, i => Right((Unfalsified, i)))
+          go(m, n / 3, n, rands, i => Right((Unfalsified, i)))
         case s => s
       }
     }
