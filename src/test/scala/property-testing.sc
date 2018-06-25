@@ -135,7 +135,7 @@ sample(randListOf(char), rng1)
 sample(int, rng2)
 sample(char, rng2)
 sample(short, rng2)
-sample(string, rng2)
+sample(string, rng1)
 sample(union(choose(0, 3), choose(3, 5)), rng)
 
 sample(weighted((choose(0, 5), 0.5),

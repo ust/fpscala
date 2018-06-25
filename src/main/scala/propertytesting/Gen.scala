@@ -74,20 +74,18 @@ object Gen {
 
   def unsized[A](g: Gen[A]): SGen[A] = Unsized(g)
 
-  def flatMap[A, B](g: SGen[A])(f: A => SGen[B]): SGen[B] =
-    g match {
+  def flatMap[A, B](g: SGen[A])(f: A => SGen[B]): SGen[B] = g match {
       case Unsized(u) => Unsized(u.flatMap(a => f(a).gen))
       case Sized(s) => Sized(s(_).flatMap(a => f(a).gen))
     }
 
-  def map[A, B](g: SGen[A])(f: A => B): SGen[B] =
-    g match {
+  def map[A, B](g: SGen[A])(f: A => B): SGen[B] = g match {
       case Unsized(u) => Unsized(u.map(f))
       case Sized(s) => Sized(s(_).map(f))
     }
 
   def randListOf[A](a: Gen[A]): Gen[List[A]] =
-    choose(0, 11).flatMap(a.listOfN)
+    choose(0, Int.MaxValue).flatMap(a.listOfN)
 
   def listOf1[A](g: Gen[A]): SGen[List[A]] = Sized(_ => g.listOfN(1))
 
@@ -110,7 +108,7 @@ object Gen {
 
   def choose(start: Int, stopExclusive: Int): Gen[Int] = {
     val s = choose(start.toDouble,
-      stopExclusive.toDouble).sample.map(_.intValue())
+      stopExclusive.toDouble).sample.map(_.intValue)
     val d = bounded(Stream.unfold(start)(s =>
       if (s < stopExclusive) Some((s, s + 1)) else None))
     Gen(s, d)

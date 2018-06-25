@@ -14,7 +14,7 @@ object JustRunner {
 
   }
 
-  def sample[A](g: Gen[A], l: RNG = rng) =
-    (g.sample.run(l)._1)
+  def sample[A](g: Gen[A], l: RNG = rng): A =
+    g.sample.run(l)._1
 
 }
