@@ -1,8 +1,10 @@
 import java.util.concurrent.{ExecutorService, Executors}
 
+import datastructures.Leaf
 import lazyness._
 import parallelism._
 import propertytesting.Gen._
+import propertytesting.SGen._
 import propertytesting.Prop._
 import propertytesting._
 import state._
@@ -64,6 +66,9 @@ run(forAllPar(int) {
   i => Par.equal(Par.unit(i), Par.fork(Par.unit(i)))
 })
 run(forAll {
+  randListOf(smallInt)
+}(l => l.reverse.reverse == l))
+run(forAll {
   randListOf(int) ** genFn(smallInt)(_ < 0)
 } {
   case l ** f => l.takeWhile(f).forall(f)
@@ -97,12 +102,18 @@ run("unfold") {
 import datastructures.Tree
 
 def tree[A](g: SGen[A])(f: Gen[A => Tree[A]]): SGen[Tree[A]] =
-  Gen.flatMap(g)(???)
+  g.flatMap(a => f.unsized.map(_(a)))
+
 
 
 "^^^^^^^^ you are here ^^^^^^^"
 // TODO SGen
 // TODO sequence
+val sgen = sized(int)
+val gFn = genFn(int)(a => {
+  if (a < 0) Leaf(a) else Leaf(-a)
+})
+sample(tree(sgen)(gFn)(10), rng)("kurva")
 sample(genIntFn(int), rng1)("hui")
 sample(genIntFn(int), rng2)("hui")
 sample(genIntFn(int), rng1)("zhopa")
@@ -123,7 +134,7 @@ sample(boolean, rng)
 sample(boolean, rng1)
 exhaustive(choose(1, 1).listOfN(2))
 exhaustive(choose(1, 2).listOfN(2))
-exhaustive(choose(1, 4).listOfN(1))
+exhaustive(choose(1, 4).listOfN(3))
 exhaustive(choose(1, 3).listOfN(2))
 exhaustive(choose(1, 3).listOfN(3))
 exhaustive(choose(1, 4).listOfN(2))

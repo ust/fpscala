@@ -26,6 +26,8 @@ case class Gen[+A](sample: State[RNG, A],
   def **[B](g: Gen[B]): Gen[(A, B)] =
     map2(g)((_, _))
 
+  def filter(p: A => Boolean) = ???
+
   def listOfN(n: Int): Gen[List[A]] = n match {
     case 0 => map(_ => Nil)
     case 1 => map(_ :: Nil)
@@ -34,25 +36,9 @@ case class Gen[+A](sample: State[RNG, A],
 
   def listOf1: Gen[List[A]] = listOfN(1)
 
-  def listOf: SGen[A] = Gen.sized(this)
+  def listOf: SGen[A] = SGen.sized(this)
 
-  def unsized: SGen[A] = Gen.unsized(this)
-}
-
-trait SGen[+A] {
-  def map[B](f: A => B): SGen[B] = Gen.map(this)(f)
-
-  def flatMap[B](f: A => SGen[B]): SGen[B] = Gen.flatMap(this)(f)
-
-  def gen: Gen[A]
-}
-
-case class Sized[+A](forSize: Size => Gen[A]) extends SGen[A] {
-  override def gen: Gen[A] = forSize(1)
-}
-
-case class Unsized[+A](get: Gen[A]) extends SGen[A] {
-  override def gen: Gen[A] = get
+  def unsized: SGen[A] = SGen.unsized(this)
 }
 
 object Gen {
@@ -70,37 +56,14 @@ object Gen {
     def unapply[A, B](p: (A, B)) = Some(p)
   }
 
-  def sized[A](g: Gen[A]): SGen[A] = Sized(_ => g)
+  /** Between 0 and 1, not including 1. */
+  val uniform: Gen[Double] = Gen(RNG.double, unbounded)
 
-  def unsized[A](g: Gen[A]): SGen[A] = Unsized(g)
-
-  def flatMap[A, B](g: SGen[A])(f: A => SGen[B]): SGen[B] = g match {
-      case Unsized(u) => Unsized(u.flatMap(a => f(a).gen))
-      case Sized(s) => Sized(s(_).flatMap(a => f(a).gen))
-    }
-
-  def map[A, B](g: SGen[A])(f: A => B): SGen[B] = g match {
-      case Unsized(u) => Unsized(u.map(f))
-      case Sized(s) => Sized(s(_).map(f))
-    }
-
-  def randListOf[A](a: Gen[A]): Gen[List[A]] =
-    choose(0, Int.MaxValue).flatMap(a.listOfN)
-
-  def listOf1[A](g: Gen[A]): SGen[List[A]] = Sized(_ => g.listOfN(1))
-
-  def listOf[A](g: Gen[A]): SGen[List[A]] = Sized(n => g.listOfN(n))
-
-  def union[A](g1: Gen[A], g2: Gen[A]): Gen[A] =
-    boolean.flatMap(if (_) g2 else g1)
 
   def weighted[A](g1: (Gen[A], Double),
                   g2: (Gen[A], Double)): Gen[A] =
     uniform.flatMap(p =>
       if (p * (g1._2 + g2._2) < g1._2) g1._1 else g2._1)
-
-  /** Between 0 and 1, not including 1. */
-  val uniform: Gen[Double] = Gen(RNG.double, unbounded)
 
   /** Between `i` and `j`, not including `j`. */
   def choose(i: Double, j: Double): Gen[Double] =
@@ -121,6 +84,12 @@ object Gen {
       .map(_.toShort)
 
   val int: Gen[Int] = choose(Int.MinValue, Int.MaxValue)
+
+  def randListOf[A](g: Gen[A]): Gen[List[A]] =
+    choose(0, 11).flatMap(a => g.listOfN(if (a < 0) -a else a))
+
+  def union[A](g1: Gen[A], g2: Gen[A]): Gen[A] =
+    boolean.flatMap(if (_) g2 else g1)
 
   def sameParity(from: Int, to: Int): Gen[(Int, Int)] = {
     val g = choose(from, to)
@@ -145,6 +114,42 @@ object Gen {
 
   def genFn[A, B](g: Gen[Any])(f: Int => B): Gen[A => B] =
     genIntFn[A](g).map(i => a => f(i(a)))
+}
+
+trait SGen[+A] {
+  def map[B](f: A => B): SGen[B] = SGen.map(this)(f)
+
+  def flatMap[B](f: A => SGen[B]): SGen[B] = SGen.flatMap(this)(f)
+
+  def gen: Gen[A]
+}
+
+case class Sized[+A](forSize: Size => Gen[A]) extends SGen[A] {
+  override def gen: Gen[A] = forSize(1)
+}
+
+case class Unsized[+A](get: Gen[A]) extends SGen[A] {
+  override def gen: Gen[A] = get
+}
+
+object SGen {
+  def flatMap[A, B](g: SGen[A])(f: A => SGen[B]): SGen[B] = g match {
+    case Unsized(u) => Unsized(u.flatMap(a => f(a).gen))
+    case Sized(s) => Sized(s(_).flatMap(a => f(a).gen))
+  }
+
+  def map[A, B](g: SGen[A])(f: A => B): SGen[B] = g match {
+    case Unsized(u) => Unsized(u.map(f))
+    case Sized(s) => Sized(s(_).map(f))
+  }
+
+  def sized[A](g: Gen[A]): SGen[A] = Sized(_ => g)
+
+  def unsized[A](g: Gen[A]): SGen[A] = Unsized(g)
+
+  def listOf1[A](g: Gen[A]): SGen[List[A]] = Sized(_ => g.listOfN(1))
+
+  def listOf[A](g: Gen[A]): SGen[List[A]] = Sized(n => g.listOfN(n))
 }
 
 trait Status {
