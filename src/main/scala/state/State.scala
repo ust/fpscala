@@ -56,7 +56,7 @@ object RNG {
   def randomPair: Rand[(Int, Int)] = int.map2(int)((_, _))
 
   def positiveInt: Rand[Int] =
-    int.flatMap(i => // todo return same if +
+    int.flatMap(i =>
       if (Int.MinValue != 0) int.map(_.abs) else positiveInt)
 
 

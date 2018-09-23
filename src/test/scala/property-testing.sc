@@ -16,8 +16,8 @@ val smallInt = choose(-10, 10)
 val ES: ExecutorService =
   Executors.newCachedThreadPool
 
-def sample[A](g: Gen[A], l: RNG = rng) =
-  g.sample.run(l)._1
+def sample[A](g: Gen[A], r: RNG = rng) =
+  g.sample.run(r)._1
 def exhaustive[A](g: Gen[A]) =
   g.exhaustive.filter(_.isDefined).map(_.get).toList
 
