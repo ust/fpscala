@@ -1,20 +1,44 @@
 package propertytesting2
 
-class Gen[A] {
-  def listOf[A](a: Gen[A]): Gen[List[A]] = ???
-
-  def listOfN[A](n: Int, a: Gen[A]): Gen[List[A]] = ???
-}
-
+import lazyness.Stream
 import state.{RNG, State}
 
-object Gen {
-  type Gen[A] = State[RNG, A]
+case class Gen[+A](sample: State[RNG, A], exhaustive: Stream[A]) {
 
-  def choose(start: Int, stopExclusive: Int): Gen[Int] = RNG.int.map(_.abs / (stopExclusive - start) + start)
+  def map[B](f: A => B): Gen[B] = Gen(sample.map(f), exhaustive.map(f))
+
 }
 
-import Prop._
+object Gen {
+
+  def unit[A](a: => A): Gen[A] = Gen(State.unit(a), Stream(a))
+
+  def listOf[A](a: Gen[A]): Gen[List[A]] = ???
+
+  def listOfN[A](n: Int, a: Gen[A]): Gen[List[A]] = {
+    def epic(streamList: List[Stream[A]]): List[Stream[A]] = ???
+
+    a.map(List(_))
+  }
+
+  def choose(start: Int, stopExclusive: Int): Gen[Int] = {
+    val sampler = RNG.int.map(_.abs % (stopExclusive - start) + start)
+    val exhaustive = Stream.unfold(start) {
+      case s if s < stopExclusive - 1 => Some((s, s + 1))
+      case _ => None
+    }
+    Gen(sampler, exhaustive)
+  }
+
+  def int: Gen[Int] = Gen(RNG.int, Stream.unfold(Int.MinValue) {
+    case s if s != Int.MaxValue => Some((s, s + 1))
+    case _ => None
+  })
+
+  lazy val boolean: Gen[Boolean] = choose(0, 2).map(_ != 0)
+}
+
+import propertytesting2.Prop._
 
 trait Prop {
   def &&(p: Prop): Prop = {
