@@ -15,16 +15,33 @@ object Gen {
 
   def listOf[A](a: Gen[A]): Gen[List[A]] = ???
 
-  def listOfN[A](n: Int, a: Gen[A]): Gen[List[A]] = {
-    def epic(streamList: List[Stream[A]]): List[Stream[A]] = ???
-
-    a.map(List(_))
+  def listOfN[A](n: Int, g: Gen[A]): Gen[List[A]] = {
+    Gen(g.sample.map(List(_)), Stream.unfold((n, g.exhaustive.map(_ :: Nil)))(s => s match {
+      case (c, st) if c > 0 => None
+    }))
   }
+//  def listOfN[A](n: Int, g: Gen[A]): Gen[List[A]] = {
+//    val first = g.exhaustive.uncons
+//    val exhaustive = Stream.unfold(List.fill(n)(g.exhaustive))(state => {
+//      val acc: Option[(Boolean, List[(A, Stream[A])])] = None
+//      state.foldRight(acc)((sa, z) => (sa.uncons, z) match {
+//        case (Some((a, ax)), Some((true, ls))) => Some((false, (a, ax) :: ls))
+//        case (Some((a, _)), Some((false, ls))) => Some((false, (a, sa) :: ls))
+//        case (Some((a, ax)), None) => Some((false, (a, ax) :: Nil))
+//        case (None, Some((c, ls))) => Some((true, first.toList ++ ls))
+//        case (None, None) => Some((true, first.toList))
+//      }).flatMap {
+//        case (true, _) => None
+//        case (_, r) => Some(r.unzip)
+//      }
+//    })
+//    Gen(g.sample.map(List(_)), exhaustive)
+//  }
 
   def choose(start: Int, stopExclusive: Int): Gen[Int] = {
     val sampler = RNG.int.map(_.abs % (stopExclusive - start) + start)
     val exhaustive = Stream.unfold(start) {
-      case s if s < stopExclusive - 1 => Some((s, s + 1))
+      case s if s < stopExclusive => Some((s, s + 1))
       case _ => None
     }
     Gen(sampler, exhaustive)
