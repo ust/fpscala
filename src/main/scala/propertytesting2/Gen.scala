@@ -2,41 +2,39 @@ package propertytesting2
 
 import lazyness.Stream
 import state.{RNG, State}
+import Gen._
+import state.RNG.positiveInt
 
-case class Gen[+A](sample: State[RNG, A], exhaustive: Stream[A]) {
+case class Gen[+A](sample: State[RNG, A], exhaustive: Domain[A]) {
 
-  def map[B](f: A => B): Gen[B] = Gen(sample.map(f), exhaustive.map(f))
+  def map[B](f: A => B): Gen[B] = Gen(sample.map(f), exhaustive.map(_.map(f)))
 
+  def map2[B, C](g: Gen[B])(f: (A, B) => C): Gen[C] = flatMap(a => g.map(f(a, _)))
+
+  def flatMap[B](f: A => Gen[B]): Gen[B] =
+    Gen(sample.flatMap(f(_).sample), Gen.flatMap(exhaustive)(f(_).exhaustive))
 }
 
 object Gen {
+  type Domain[+A] = Stream[Option[A]]
 
-  def unit[A](a: => A): Gen[A] = Gen(State.unit(a), Stream(a))
+  def bounded[A](a: Stream[A]): Domain[A] = a map (Some(_))
+
+  def flatMap[A, B](d: Domain[A])(f: A => Domain[B]): Domain[B] =
+    d.flatMap(_.map(f(_)).getOrElse(Stream(None)))
+
+  def unbounded: Domain[Nothing] = Stream(None)
+
+  def unit[A](a: => A): Gen[A] = Gen(State.unit(a), bounded(Stream(a)))
+
+  def union[A](g1: Gen[A], g2: Gen[A]): Gen[A] = ???
 
   def listOf[A](a: Gen[A]): Gen[List[A]] = ???
 
-  def listOfN[A](n: Int, g: Gen[A]): Gen[List[A]] = {
-    Gen(g.sample.map(List(_)), Stream.unfold((n, g.exhaustive.map(_ :: Nil)))(s => s match {
-      case (c, st) if c > 0 => None
-    }))
+  def listOfN[A](n: Int, g: Gen[A]): Gen[List[A]] = n match {
+    case 0 => Gen.unit(Nil)
+    case _ => g.flatMap(a => listOfN(n - 1, g).map(a :: _))
   }
-//  def listOfN[A](n: Int, g: Gen[A]): Gen[List[A]] = {
-//    val first = g.exhaustive.uncons
-//    val exhaustive = Stream.unfold(List.fill(n)(g.exhaustive))(state => {
-//      val acc: Option[(Boolean, List[(A, Stream[A])])] = None
-//      state.foldRight(acc)((sa, z) => (sa.uncons, z) match {
-//        case (Some((a, ax)), Some((true, ls))) => Some((false, (a, ax) :: ls))
-//        case (Some((a, _)), Some((false, ls))) => Some((false, (a, sa) :: ls))
-//        case (Some((a, ax)), None) => Some((false, (a, ax) :: Nil))
-//        case (None, Some((c, ls))) => Some((true, first.toList ++ ls))
-//        case (None, None) => Some((true, first.toList))
-//      }).flatMap {
-//        case (true, _) => None
-//        case (_, r) => Some(r.unzip)
-//      }
-//    })
-//    Gen(g.sample.map(List(_)), exhaustive)
-//  }
 
   def choose(start: Int, stopExclusive: Int): Gen[Int] = {
     val sampler = RNG.int.map(_.abs % (stopExclusive - start) + start)
@@ -44,15 +42,22 @@ object Gen {
       case s if s < stopExclusive => Some((s, s + 1))
       case _ => None
     }
-    Gen(sampler, exhaustive)
+    Gen(sampler, bounded(exhaustive))
   }
 
-  def int: Gen[Int] = Gen(RNG.int, Stream.unfold(Int.MinValue) {
+  def int: Gen[Int] = Gen(RNG.int, bounded(Stream.unfold(Int.MinValue) {
     case s if s != Int.MaxValue => Some((s, s + 1))
     case _ => None
-  })
+  }))
 
   lazy val boolean: Gen[Boolean] = choose(0, 2).map(_ != 0)
+
+  lazy val double: Gen[Double] = Gen(RNG.double, unbounded)
+
+  lazy val uniform: Gen[Double] =
+    Gen(positiveInt.map(_ / (Int.MaxValue.toDouble + 1)), unbounded)
+
+  def choose(i: Double, j: Double): Gen[Double] = uniform.map(_ * (j - i) + i)
 }
 
 import propertytesting2.Prop._

@@ -1,3 +1,5 @@
+import lazyness.Stream
+
 object JustRunner {
   def main(args: Array[String]): Unit = {
     import propertytesting2.Gen
@@ -6,23 +8,13 @@ object JustRunner {
     def run[A](seed: Int)(g: Gen[A]): A =
       g.sample.run(RNG.simple(seed))._1
     def run0[A] = run[A](0)(_)
-    def run1[A] = run[A](4567890)(_)
-    def run2[A] = run[A](-98765432)(_)
-    def exh[A](g: Gen[A]) = g.exhaustive.toList
+    def run1[A] = run[A](2)(_)
+    def run2[A] = run[A](9876432)(_)
+    def exh[A](g: Gen[A]): List[A] = g.exhaustive.flatMap(
+      _.map(Stream(_)).getOrElse(Stream.empty)).toList
 
-    run0(Gen.choose(-5, 11))
-    run1(Gen.choose(-5, 11))
-    run2(Gen.choose(-5, 11))
-    exh(Gen.choose(-5, 11))
 
-    exh(Gen.listOfN(0, Gen.choose(0, 1)))
-    exh(Gen.listOfN(1, Gen.choose(0, 1)))
-    exh(Gen.listOfN(1, Gen.choose(0, 2)))
-    exh(Gen.listOfN(1, Gen.choose(0, 3)))
-    exh(Gen.listOfN(2, Gen.choose(0, 1)))
-    exh(Gen.listOfN(2, Gen.choose(0, 2)))
-    exh(Gen.listOfN(3, Gen.choose(0, 1)))
-    exh(Gen.listOfN(3, Gen.choose(0, 2)))
+    run0(Gen.uniform)
   }
 
 }
