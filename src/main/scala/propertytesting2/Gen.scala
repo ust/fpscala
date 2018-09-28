@@ -13,6 +13,15 @@ case class Gen[+A](sample: State[RNG, A], exhaustive: Domain[A]) {
 
   def flatMap[B](f: A => Gen[B]): Gen[B] =
     Gen(sample.flatMap(f(_).sample), Gen.flatMap(exhaustive)(f(_).exhaustive))
+
+  def unsized: SGen[A] = SGen(_ => this)
+}
+
+case class SGen[+A](forSize: Int => Gen[A]) {
+  def map[B](f: A => B): SGen[B] = SGen(s => forSize(s).map(f))
+
+  def flatMap[B](f: A => SGen[B]): SGen[B] =
+    SGen(s => forSize(s).flatMap(f(_).forSize(s)))
 }
 
 object Gen {
@@ -27,9 +36,17 @@ object Gen {
 
   def unit[A](a: => A): Gen[A] = Gen(State.unit(a), bounded(Stream(a)))
 
-  def union[A](g1: Gen[A], g2: Gen[A]): Gen[A] = ???
+  def union[A](g1: Gen[A], g2: Gen[A]): Gen[A] =
+    boolean.flatMap(if (_) g1 else g2)
+
+  def weighted[A](g1: (Gen[A], Double), g2: (Gen[A], Double)): Gen[A] = Gen(
+    uniform.flatMap(p => if (p < g1._2 / (g1._2 + g2._2)) g1._1 else g2._1).sample,
+    union(g1._1, g2._1).exhaustive
+  )
 
   def listOf[A](a: Gen[A]): Gen[List[A]] = ???
+
+  def listOf[A](g: Gen[A]): SGen[List[A]] = SGen(listOfN(_, g))
 
   def listOfN[A](n: Int, g: Gen[A]): Gen[List[A]] = n match {
     case 0 => Gen.unit(Nil)
@@ -60,23 +77,90 @@ object Gen {
   def choose(i: Double, j: Double): Gen[Double] = uniform.map(_ * (j - i) + i)
 }
 
+trait Status
+
+case object Proven extends Status
+
+case object Unfalsified extends Status
+
 import propertytesting2.Prop._
 
-trait Prop {
-  def &&(p: Prop): Prop = {
-    val prop = this
-    new Prop {
-      override def check: Either[FailedCase, SuccessCount] = ??? //prop.check && p.check
+case class Prop(run: (MaxSize, TestCases, RNG) => Result) {
+  def &&(p: Prop): Prop = Prop {
+    (m, n, rng) => {
+      run(m, n, rng) match {
+        case Right((status, cases)) =>
+          p.run(m, n, rng).map(r => (status match {
+            case Proven => r._1
+            case s => s
+          }, cases + r._2))
+        case l => l
+      }
     }
-    prop
   }
 
-  def check: Either[FailedCase, SuccessCount]
+  def ||(p: Prop): Prop = Prop {
+    (m, n, rng) => {
+      run(m, n, rng) match {
+        case Left(_) => p.run(m, n, rng)
+        case r => r
+      }
+    }
+  }
+
+  def check: Either[FailedCase, (Status, SuccessCount)] = ???
 }
 
 object Prop {
+  type MaxSize = Int
   type SuccessCount = Int
   type FailedCase = String
+  type TestCases = Int
+  type Result = Either[FailedCase, (Status, SuccessCount)]
 
-  def forAll[A](a: Gen[A])(f: A => Boolean): Prop = ???
+  def forAll[A](a: Gen[A])(f: A => Boolean): Prop = Prop {
+    (m, n, rng) => {
+      def go(i: Int, j: Int, s: Stream[Option[A]], onEnd: Int => Result): Result =
+        if (i == j) Right((Unfalsified, i))
+        else s.uncons match {
+          case Some((Some(h), t)) =>
+            try {
+              if (f(h)) go(i + 1, j, t, onEnd)
+              else Left(h.toString)
+            }
+            catch {
+              case e: Exception => Left(buildMsg(h, e))
+            }
+          case Some((None, _)) => Right((Unfalsified, i))
+          case None => onEnd(i)
+        }
+
+      go(0, n / 3, a.exhaustive, i => Right((Proven, i))) match {
+        case Right((Unfalsified, _)) =>
+          val rands = randomStream(a)(rng).map(Some(_))
+          go(n / 3, n, rands, i => Right((Unfalsified, i)))
+        case s => s
+      }
+    }
+  }
+
+  def forAll[A](g: SGen[A])(f: A => Boolean): Prop =
+    forAll(g.forSize)(f)
+
+  def forAll[A](g: Int => Gen[A])(f: A => Boolean): Prop = Prop {
+    (max, n, rng) => {
+      val casesPerSize = n / max + 1
+      Stream.from(0).take(max + 1).map(i => forAll(g(i))(f))
+        .toList.map(p => Prop((max, n, rng) => p.run(max, casesPerSize, rng)))
+        .reduceLeft(_ && _).run(max, n, rng)
+    }
+  }
+
+  private[this] def randomStream[A](g: Gen[A])(rng: RNG): Stream[A] =
+    Stream.unfold(rng)(rng => Some(g.sample.run(rng)))
+
+  private[this] def buildMsg[A](s: A, e: Exception): String =
+    "test case: " + s + "\n" +
+      "generated an exception: " + e.getMessage + "\n" +
+      "stack trace:\n" + e.getStackTrace.mkString("\n")
 }
