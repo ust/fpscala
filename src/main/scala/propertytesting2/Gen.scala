@@ -1,9 +1,9 @@
 package propertytesting2
 
 import lazyness.Stream
-import state.{RNG, State}
-import Gen._
+import propertytesting2.Gen._
 import state.RNG.positiveInt
+import state.{RNG, State}
 
 case class Gen[+A](sample: State[RNG, A], exhaustive: Domain[A]) {
 
@@ -44,8 +44,6 @@ object Gen {
     union(g1._1, g2._1).exhaustive
   )
 
-  def listOf[A](a: Gen[A]): Gen[List[A]] = ???
-
   def listOf[A](g: Gen[A]): SGen[List[A]] = SGen(listOfN(_, g))
 
   def listOfN[A](n: Int, g: Gen[A]): Gen[List[A]] = n match {
@@ -78,6 +76,8 @@ object Gen {
 }
 
 trait Status
+
+case object Exhausted extends Status
 
 case object Proven extends Status
 
