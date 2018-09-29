@@ -75,40 +75,39 @@ object Gen {
   def choose(i: Double, j: Double): Gen[Double] = uniform.map(_ * (j - i) + i)
 }
 
-trait Status
-
-case object Exhausted extends Status
+trait Status {
+  def &&(s: Status): Status = Status.and(this)(s)
+}
 
 case object Proven extends Status
 
+case object Exhausted extends Status
+
 case object Unfalsified extends Status
+
+object Status {
+  def and(a: Status)(b: Status): Status = (a, b) match {
+    case (Unfalsified, _) | (_, Unfalsified) => Unfalsified
+    case (Exhausted, _) | (_, Exhausted) => Exhausted
+    case _ => Proven
+  }
+}
 
 import propertytesting2.Prop._
 
 case class Prop(run: (MaxSize, TestCases, RNG) => Result) {
   def &&(p: Prop): Prop = Prop {
-    (m, n, rng) => {
+    (m, n, rng) =>
       run(m, n, rng) match {
-        case Right((status, cases)) =>
-          p.run(m, n, rng).map(r => (status match {
-            case Proven => r._1
-            case s => s
-          }, cases + r._2))
+        case Right((status, cases)) => p.run(m, n, rng)
+          .map(r => (status && r._1, cases + r._2))
         case l => l
       }
-    }
   }
 
   def ||(p: Prop): Prop = Prop {
-    (m, n, rng) => {
-      run(m, n, rng) match {
-        case Left(_) => p.run(m, n, rng)
-        case r => r
-      }
-    }
+    (m, n, rng) => run(m, n, rng).fold(_ => p.run(m, n, rng), Right(_))
   }
-
-  def check: Either[FailedCase, (Status, SuccessCount)] = ???
 }
 
 object Prop {
@@ -119,27 +118,26 @@ object Prop {
   type Result = Either[FailedCase, (Status, SuccessCount)]
 
   def forAll[A](a: Gen[A])(f: A => Boolean): Prop = Prop {
-    (m, n, rng) => {
-      def go(i: Int, j: Int, s: Stream[Option[A]], onEnd: Int => Result): Result =
-        if (i == j) Right((Unfalsified, i))
+    (ma9x, n, rng) => {
+      def go(i: Int, j: Int, s: Stream[Option[A]]): Result =
+        if (i == j) Right((Exhausted, i))
         else s.uncons match {
           case Some((Some(h), t)) =>
             try {
-              if (f(h)) go(i + 1, j, t, onEnd)
+              if (f(h)) go(i + 1, j, t)
               else Left(h.toString)
             }
             catch {
               case e: Exception => Left(buildMsg(h, e))
             }
           case Some((None, _)) => Right((Unfalsified, i))
-          case None => onEnd(i)
+          case None => Right((Proven, i))
         }
 
-      go(0, n / 3, a.exhaustive, i => Right((Proven, i))) match {
-        case Right((Unfalsified, _)) =>
-          val rands = randomStream(a)(rng).map(Some(_))
-          go(n / 3, n, rands, i => Right((Unfalsified, i)))
-        case s => s
+      go(0, n / 3, a.exhaustive) match {
+        case r@(Left(_) | Right((Proven, _))) => r
+        case _ => go(n / 3, n, randomStream(a)(rng).map(Some(_)))
+          .map(r => (Unfalsified, r._2))
       }
     }
   }
@@ -147,11 +145,11 @@ object Prop {
   def forAll[A](g: SGen[A])(f: A => Boolean): Prop =
     forAll(g.forSize)(f)
 
-  def forAll[A](g: Int => Gen[A])(f: A => Boolean): Prop = Prop {
+  private[this] def forAll[A](g: Int => Gen[A])(f: A => Boolean): Prop = Prop {
     (max, n, rng) => {
       val casesPerSize = n / max + 1
       Stream.from(0).take(max + 1).map(i => forAll(g(i))(f))
-        .toList.map(p => Prop((max, n, rng) => p.run(max, casesPerSize, rng)))
+        .toList.map(p => Prop((max, _, rng) => p.run(max, casesPerSize, rng)))
         .reduceLeft(_ && _).run(max, n, rng)
     }
   }

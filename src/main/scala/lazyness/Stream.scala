@@ -79,7 +79,6 @@ trait Stream[+A] {
       }
     })
 
-  // todo with zip and forAll
   def startsWith[A1 >: A](that: Stream[A1]): Boolean =
     Stream.unfold((this, that))(s => s._2.uncons match {
       case Some((h, t)) => s._1.uncons match {
