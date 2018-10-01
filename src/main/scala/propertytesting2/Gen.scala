@@ -12,24 +12,39 @@ case class Gen[+A](sample: State[RNG, A], exhaustive: Domain[A]) {
   def map2[B, C](g: Gen[B])(f: (A, B) => C): Gen[C] = flatMap(a => g.map(f(a, _)))
 
   def flatMap[B](f: A => Gen[B]): Gen[B] =
-    Gen(sample.flatMap(f(_).sample), Gen.flatMap(exhaustive)(f(_).exhaustive))
+    Gen(sample.flatMap(f(_).sample), Gen.flatDomain(exhaustive)(f(_).exhaustive))
 
-  def unsized: SGen[A] = SGen(_ => this)
+  def listOf: SGen[List[A]] = Gen.listOf(this)
+
+  def unsized: SGen[A] = Gen.unsized(this)
 }
 
-case class SGen[+A](forSize: Int => Gen[A]) {
-  def map[B](f: A => B): SGen[B] = SGen(s => forSize(s).map(f))
+trait SGen[+A] {
+  def map[B](f: A => B): SGen[B] = Gen.map(this)(f)
 
-  def flatMap[B](f: A => SGen[B]): SGen[B] =
-    SGen(s => forSize(s).flatMap(f(_).forSize(s)))
+  def flatMap[B](f: A => SGen[B]): SGen[B] = Gen.flatMap(this)(f)
 }
+
+case class Unsized[+A](get: Gen[A]) extends SGen[A]
+
+case class Sized[+A](forSize: Size => Gen[A]) extends SGen[A]
 
 object Gen {
+  type Size = Int
   type Domain[+A] = Stream[Option[A]]
 
   def bounded[A](a: Stream[A]): Domain[A] = a map (Some(_))
 
-  def flatMap[A, B](d: Domain[A])(f: A => Domain[B]): Domain[B] =
+  def map[A, B](g: SGen[A])(f: A => B): SGen[B] = g match {
+    case Sized(forSize) => Sized(s => forSize(s).map(f))
+    case Unsized(get) => Unsized(get.map(f))
+  }
+
+  def flatMap[A, B](g: SGen[A])(f: A => SGen[B]): SGen[B] =
+  // SGen(s => forSize(s).flatMap(f(_).forSize(s)))
+    ???
+
+  def flatDomain[A, B](d: Domain[A])(f: A => Domain[B]): Domain[B] =
     d.flatMap(_.map(f(_)).getOrElse(Stream(None)))
 
   def unbounded: Domain[Nothing] = Stream(None)
@@ -44,7 +59,9 @@ object Gen {
     union(g1._1, g2._1).exhaustive
   )
 
-  def listOf[A](g: Gen[A]): SGen[List[A]] = SGen(listOfN(_, g))
+  def unsized[A](g: Gen[A]): SGen[A] = Unsized(g)
+
+  def listOf[A](g: Gen[A]): SGen[List[A]] = Sized(listOfN(_, g))
 
   def listOfN[A](n: Int, g: Gen[A]): Gen[List[A]] = n match {
     case 0 => Gen.unit(Nil)
@@ -96,13 +113,20 @@ object Status {
 import propertytesting2.Prop._
 
 case class Prop(run: (MaxSize, TestCases, RNG) => Result) {
-  def &&(p: Prop): Prop = Prop {
-    (m, n, rng) =>
-      run(m, n, rng) match {
-        case Right((status, cases)) => p.run(m, n, rng)
-          .map(r => (status && r._1, cases + r._2))
-        case l => l
-      }
+//  def &&(p: Prop): Prop = Prop {
+//    (m, n, rng) =>
+//      run(m, n, rng) match {
+//        case Right((status, cases)) => p.run(m, n, rng)
+//          .map(r => (status && r._1, cases + r._2))
+//        case l => l
+//      }
+//  }
+
+  def &&(p: Prop) = Prop {
+    (max,n,rng) => run(max,n,rng) match {
+      case Right((a,n)) => p.run(max,n,rng).right.map { case (s,m) => (s,n+m) }
+      case l => l
+    }
   }
 
   def ||(p: Prop): Prop = Prop {
@@ -118,39 +142,45 @@ object Prop {
   type Result = Either[FailedCase, (Status, SuccessCount)]
 
   def forAll[A](a: Gen[A])(f: A => Boolean): Prop = Prop {
-    (ma9x, n, rng) => {
-      def go(i: Int, j: Int, s: Stream[Option[A]]): Result =
-        if (i == j) Right((Exhausted, i))
+    (_, n, rng) => {
+      def go(i: Int, j: Int, s: Stream[Option[A]], onEnd: Int => Result): Result =
+        if (i == j) Right((Unfalsified, i))
         else s.uncons match {
           case Some((Some(h), t)) =>
             try {
-              if (f(h)) go(i + 1, j, t)
+              if (f(h)) go(i + 1, j, t, onEnd)
               else Left(h.toString)
             }
             catch {
               case e: Exception => Left(buildMsg(h, e))
             }
           case Some((None, _)) => Right((Unfalsified, i))
-          case None => Right((Proven, i))
+          case None => onEnd(i)
         }
 
-      go(0, n / 3, a.exhaustive) match {
-        case r@(Left(_) | Right((Proven, _))) => r
-        case _ => go(n / 3, n, randomStream(a)(rng).map(Some(_)))
-          .map(r => (Unfalsified, r._2))
+      go(0, n / 3, a.exhaustive, i => Right((Proven, i))) match {
+        case Right((Unfalsified, _)) =>
+          val rands = randomStream(a)(rng).map(Some(_))
+          go(n / 3, n, rands, i => Right((Unfalsified, i)))
+        case s => s
       }
     }
   }
 
-  def forAll[A](g: SGen[A])(f: A => Boolean): Prop =
-    forAll(g.forSize)(f)
+  def forAll[A](g: SGen[A])(f: A => Boolean): Prop = g match {
+    case Sized(forSize) => forAll(forSize)(f)
+    case Unsized(get) => forAll(get)(f)
+  }
 
   private[this] def forAll[A](g: Int => Gen[A])(f: A => Boolean): Prop = Prop {
     (max, n, rng) => {
       val casesPerSize = n / max + 1
       Stream.from(0).take(max + 1).map(i => forAll(g(i))(f))
-        .toList.map(p => Prop((max, _, rng) => p.run(max, casesPerSize, rng)))
-        .reduceLeft(_ && _).run(max, n, rng)
+        .toList.map(p => Prop((_, _, _) => p.run(max, casesPerSize, rng)))
+        .reduceLeft(_ && _).run(max, n, rng).map {
+        case (Proven, c) => (Exhausted, c)
+        case x => x
+      }
     }
   }
 

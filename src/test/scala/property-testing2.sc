@@ -14,10 +14,20 @@ def exh[A](g: Gen[A]): List[A] = g.exhaustive.flatMap(
 def run0(p: Prop): Result = p.run(100, 5, r0)
 def run1(p: Prop): Result = p.run(5, 20, r0)
 def run2(p: Prop): Result = p.run(100, 100, r0)
+def run3(p: Prop): Result = p.run(11, 500, r0)
 "-------------------------------------------------------"
 
 val prop1 = Prop.forAll(Gen.boolean)(if (_) true else false)
 val prop2 = Prop.forAll(Gen.choose(0, 10))(_ < 10)
+val sized1 = Prop.forAll(Gen.boolean.unsized)(b => if (b) b else !b)
+val sized2 = Prop.forAll(Gen.choose(0, 10).listOf)(_.forall(_ < 10))
+
+run0(sized1)
+run1(sized1)
+run0(sized2)
+run1(sized2)
+run2(sized2)
+run3(sized2)
 
 run0(prop1)
 run1(prop1)
