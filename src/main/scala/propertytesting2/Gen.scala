@@ -11,10 +11,14 @@ case class Gen[+A](sample: State[RNG, A], exhaustive: Domain[A]) {
 
   def map2[B, C](g: Gen[B])(f: (A, B) => C): Gen[C] = flatMap(a => g.map(f(a, _)))
 
+  def **[B](g: Gen[B]): Gen[(A,B)] = (this map2 g)((_,_))
+
   def flatMap[B](f: A => Gen[B]): Gen[B] =
     Gen(sample.flatMap(f(_).sample), Gen.flatDomain(exhaustive)(f(_).exhaustive))
 
   def listOf: SGen[List[A]] = Gen.listOf(this)
+
+  def listOf1: SGen[List[A]] = Gen.listOf1(this)
 
   def unsized: SGen[A] = Gen.unsized(this)
 }
@@ -62,6 +66,8 @@ object Gen {
   def unsized[A](g: Gen[A]): SGen[A] = Unsized(g)
 
   def listOf[A](g: Gen[A]): SGen[List[A]] = Sized(listOfN(_, g))
+
+  def listOf1[A](g: Gen[A]): SGen[List[A]] = Sized(s => listOfN(s max 1, g))
 
   def listOfN[A](n: Int, g: Gen[A]): Gen[List[A]] = n match {
     case 0 => Gen.unit(Nil)
@@ -140,6 +146,8 @@ object Prop {
   type FailedCase = String
   type TestCases = Int
   type Result = Either[FailedCase, (Status, SuccessCount)]
+
+  def check(p: => Boolean): Prop = forAll(unit(()))(_ => p)
 
   def forAll[A](a: Gen[A])(f: A => Boolean): Prop = Prop {
     (_, n, rng) => {
