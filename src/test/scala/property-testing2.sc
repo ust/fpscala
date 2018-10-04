@@ -17,6 +17,14 @@ def run2(p: Prop): Result = p.run(100, 100, r0)
 def run3(p: Prop): Result = p.run(11, 500, r0)
 "-------------------------------------------------------"
 
+exh(Gen.character)
+run0(Gen.character)
+run1(Gen.character)
+run2(Gen.character)
+
+run0(Prop.forAll(Gen.string)(s => s.forall(_ != '*')))
+
+"-------------------------------------------------------"
 val prop1 = Prop.forAll(Gen.boolean)(if (_) true else false)
 val prop2 = Prop.forAll(Gen.choose(0, 10))(_ < 10)
 val sized1 = Prop.forAll(Gen.boolean.unsized)(b => if (b) b else !b)

@@ -11,7 +11,7 @@ case class Gen[+A](sample: State[RNG, A], exhaustive: Domain[A]) {
 
   def map2[B, C](g: Gen[B])(f: (A, B) => C): Gen[C] = flatMap(a => g.map(f(a, _)))
 
-  def **[B](g: Gen[B]): Gen[(A,B)] = (this map2 g)((_,_))
+  def **[B](g: Gen[B]): Gen[(A, B)] = (this map2 g) ((_, _))
 
   def flatMap[B](f: A => Gen[B]): Gen[B] =
     Gen(sample.flatMap(f(_).sample), Gen.flatDomain(exhaustive)(f(_).exhaustive))
@@ -27,6 +27,15 @@ trait SGen[+A] {
   def map[B](f: A => B): SGen[B] = Gen.map(this)(f)
 
   def flatMap[B](f: A => SGen[B]): SGen[B] = Gen.flatMap(this)(f)
+
+  def map2[B, C](g: SGen[B])(f: (A, B) => C): SGen[C] = flatMap(a => g.map(f(a, _)))
+
+  def **[B](s2: SGen[B]): SGen[(A, B)] = (this, s2) match {
+    case (Sized(g), Sized(g2)) => Sized(n => g(n) ** g2(n))
+    case (Unsized(g), Unsized(g2)) => Unsized(g ** g2)
+    case (Sized(g), Unsized(g2)) => Sized(n => g(n) ** g2)
+    case (Unsized(g), Sized(g2)) => Sized(n => g ** g2(n))
+  }
 }
 
 case class Unsized[+A](get: Gen[A]) extends SGen[A]
@@ -96,6 +105,15 @@ object Gen {
     Gen(positiveInt.map(_ / (Int.MaxValue.toDouble + 1)), unbounded)
 
   def choose(i: Double, j: Double): Gen[Double] = uniform.map(_ * (j - i) + i)
+
+  private[this] val charList: Seq[Char] = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9') ++
+    List(' ', '!', '?', '.', ',')
+
+  val character: Gen[Char] = choose(0, charList.size).map(charList(_))
+
+  val string: SGen[String] = character.listOf.map(_.toString)
+
+  def genStringIntFn(g: Gen[Int]): Gen[String => Int] = g.map(i => s => s.hashCode * i)
 }
 
 trait Status {
@@ -119,20 +137,21 @@ object Status {
 import propertytesting2.Prop._
 
 case class Prop(run: (MaxSize, TestCases, RNG) => Result) {
-//  def &&(p: Prop): Prop = Prop {
-//    (m, n, rng) =>
-//      run(m, n, rng) match {
-//        case Right((status, cases)) => p.run(m, n, rng)
-//          .map(r => (status && r._1, cases + r._2))
-//        case l => l
-//      }
-//  }
+  //  def &&(p: Prop): Prop = Prop {
+  //    (m, n, rng) =>
+  //      run(m, n, rng) match {
+  //        case Right((status, cases)) => p.run(m, n, rng)
+  //          .map(r => (status && r._1, cases + r._2))
+  //        case l => l
+  //      }
+  //  }
 
   def &&(p: Prop) = Prop {
-    (max,n,rng) => run(max,n,rng) match {
-      case Right((a,n)) => p.run(max,n,rng).right.map { case (s,m) => (s,n+m) }
-      case l => l
-    }
+    (max, n, rng) =>
+      run(max, n, rng) match {
+        case Right((a, n)) => p.run(max, n, rng).right.map { case (s, m) => (s, n + m) }
+        case l => l
+      }
   }
 
   def ||(p: Prop): Prop = Prop {
@@ -146,6 +165,27 @@ object Prop {
   type FailedCase = String
   type TestCases = Int
   type Result = Either[FailedCase, (Status, SuccessCount)]
+
+  def run(description: String = "")(
+    p: Prop,
+    maxSize: MaxSize = 100,
+    testCases: TestCases = 100,
+    rng: RNG = RNG.simple(System.currentTimeMillis),
+  ): Unit = {
+    val desc = s""""$description""""
+    p.run(maxSize, testCases, rng) match {
+      case Left(msg) =>
+        println(s"$desc test failed:$msg")
+      case Right((Unfalsified, n)) =>
+        println(s"+ property $desc unfalsified, ran $n tests")
+      case Right((Proven, n)) =>
+        println(s"+ property $desc proven, ran $n tests")
+      case Right((Exhausted, n)) =>
+        println(s"+ property $desc exhausted up to max size, ran $n tests")
+      case r =>
+        println(s" $desc Unexpected state: $r")
+    }
+  }
 
   def check(p: => Boolean): Prop = forAll(unit(()))(_ => p)
 
