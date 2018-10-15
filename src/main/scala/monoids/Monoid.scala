@@ -1,12 +1,16 @@
 package monoids
 
-import propertytesting2.{Gen, Prop}
-
 trait Monoid[A] {
   def op(a1: A, a2: A): A
 
   def zero: A
 }
+
+sealed trait WC
+
+case class Stub(chars: String) extends WC
+
+case class Part(lStub: String, words: Int, rStub: String) extends WC
 
 object Monoid {
   val stringMonoid: Monoid[String] = new Monoid[String] {
@@ -41,6 +45,11 @@ object Monoid {
 
     def zero: Boolean = true
   }
+  val wcMonoid: Monoid[WC] = new Monoid[WC] {
+    def op(a1: WC, a2: WC): WC = ???
+
+    def zero: WC = Stub("")
+  }
 
   def optionMonoid[A]: Monoid[Option[A]] = new Monoid[Option[A]] {
     def op(a1: Option[A], a2: Option[A]): Option[A] = a1.orElse(a2)
@@ -63,7 +72,7 @@ object Monoid {
   def concatenate[A](as: List[A], m: Monoid[A]): A =
     as.foldLeft(m.zero)(m.op)
 
-  def foldMap[A,B](as: List[A], m: Monoid[B])(f: A => B): B =
+  def foldMap[A, B](as: List[A], m: Monoid[B])(f: A => B): B =
     as.foldLeft(m.zero)((b, a) => m.op(b, f(a)))
 
   def foldLeft[A, B](as: List[A])(z: B)(f: (B, A) => B): B =
@@ -71,5 +80,6 @@ object Monoid {
 
   def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B): B =
     foldMap(as, endoMonoid[B])(a => f(a, _))(z)
+
 
 }
