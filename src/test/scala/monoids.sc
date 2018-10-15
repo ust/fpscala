@@ -12,6 +12,11 @@ wordsMonoid.op("Hic", wordsMonoid.op("est ", "chorda ")) ==
 wordsMonoid.op("Hic ", wordsMonoid.op(" est", "chorda")) ==
   "Hic est chorda"
 
+Monoid.concatenate(List("abc", "1", "2", "3"), Monoid.stringMonoid)
+Monoid.foldMap(List(999, 1, 2, 3), Monoid.stringMonoid)(_.toString)
+Monoid.foldLeft(List(1, 2, 3))("hui")(_ + _)
+Monoid.foldRight(List(1, 2, 3))("hui")(_.toString + _)
+
 "-----------------------------------------------------------------"
 
 def monoidLaws[A](m: Monoid[A])(g: Gen[A]): Prop =
