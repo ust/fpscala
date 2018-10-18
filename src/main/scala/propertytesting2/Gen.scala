@@ -83,6 +83,10 @@ object Gen {
     case _ => g.flatMap(a => listOfN(n - 1, g).map(a :: _))
   }
 
+  object ** {
+    def unapply[A,B](p: (A,B)) = Some(p)
+  }
+
   def choose(start: Int, stopExclusive: Int): Gen[Int] = {
     val sampler = RNG.int.map(_.abs % (stopExclusive - start) + start)
     val exhaustive = Stream.unfold(start) {

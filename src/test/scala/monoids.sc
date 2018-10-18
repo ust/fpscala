@@ -1,6 +1,7 @@
-import monoids.Monoid
+import monoids.{Monoid, Stub, WC}
 import propertytesting2.Prop.Result
-import propertytesting2.{Gen, Prop}
+import propertytesting2.{Gen, Prop, SGen}
+import propertytesting2.Gen.**
 import state.RNG
 
 val r0 = RNG.simple(0)
@@ -19,23 +20,23 @@ Monoid.foldRight(List(1, 2, 3))("hui")(_.toString + _)
 
 "-----------------------------------------------------------------"
 
-def monoidLaws[A](m: Monoid[A])(g: Gen[A]): Prop =
-  Prop.forAll(g)(a => m.op(a, m.zero) == a)
-//Prop.forAll(g)(a => m.op(m.zero, a) == a)
-def monoidLawsFn[A](m: Monoid[A])(g: Gen[A]): Prop =
-  Prop.forAll(g)(a => m.op(a, m.zero) == a)
+def monoidLaws[A](m: Monoid[A])(g: SGen[A]): Prop =
+  Prop.forAll(g ** g ** g) { case a ** b ** c =>
+    m.op(a, m.op(b, c)) == m.op(m.op(a, b), c)
+  }
 
 run(Prop.forAll(Gen.string)(str => {
   val m = Monoid.stringMonoid
   m.op(str, m.zero) == str
 }))
-run(monoidLaws(Monoid.intAddition)(Gen.choose(0, 4)))
-run(monoidLaws(Monoid.intMultiplication)(Gen.choose(0, 4)))
-run(monoidLaws(Monoid.booleanOr)(Gen.boolean))
-run(monoidLaws(Monoid.booleanAnd)(Gen.boolean))
+run(monoidLaws(Monoid.intAddition)(Gen.choose(0, 4).unsized))
+run(monoidLaws(Monoid.intMultiplication)(Gen.choose(0, 4).unsized))
+run(monoidLaws(Monoid.booleanOr)(Gen.boolean.unsized))
+run(monoidLaws(Monoid.booleanAnd)(Gen.boolean.unsized))
 run(monoidLaws[Option[Int]](Monoid.optionMonoid)(Gen.boolean
   .flatMap(b => Gen.choose(0, 3)
-    .map(i => if (b) Some(i) else None))))
+    .map(i => if (b) Some(i) else None)).unsized))
+run(monoidLaws[WC](Monoid.wcMonoid)(Gen.string.map(Stub)))
 val genAtoA: Gen[String => String] =
   Gen.genStringIntFn(Gen.choose(0, 3)).map(f => f(_).toString)
 run(Prop.forAll(genAtoA.unsized ** Gen.string) { case (fn, str) =>
