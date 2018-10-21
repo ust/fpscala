@@ -115,7 +115,7 @@ object Gen {
 
   val character: Gen[Char] = choose(0, charList.size).map(charList(_))
 
-  val string: SGen[String] = character.listOf.map(_.toString)
+  val string: SGen[String] = character.listOf.map(_.mkString)
 
   def genStringIntFn(g: Gen[Int]): Gen[String => Int] = g.map(i => s => s.hashCode * i)
 }

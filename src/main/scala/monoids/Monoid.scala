@@ -47,20 +47,21 @@ object Monoid {
   }
   val wcMonoid: Monoid[WC] = new Monoid[WC] {
     def op(a1: WC, a2: WC): WC = (a1, a2) match {
-      case (Part(l, n1, a), Part(b, n2, r)) =>
-        Part(l, n1 + n2 + (if (cons(a+b).lStub.nonEmpty) 1 else 0), r)
-      case (Part(l, n, r), Stub(s)) => op(Part(l, n, ""), cons(r + s))
-      case (Stub(s), Part(l, n, r)) => op(cons(s + l), Part("", n, r))
       case (Stub(a), Stub(b)) => cons(a + b)
+      case (Stub(s), Part(l, n, r)) => op(cons(s + l), Part("", n, r))
+      case (Part(l, n, r), Stub(s)) => op(Part(l, n, ""), cons(r + s))
+      case (Part(l, 0, ""), Part(s, n, r)) => Part(l + s, n, r)
+      case (Part(l, n, s1), Part(s2, 0, "")) => Part(l, n, s1 + s2)
+      case (Part(l, n1, a), Part(b, n2, r)) =>
+        Part(l, n1 + (a + b).headOption.fold(0)(_ => 1) + n2, r)
     }
 
-    private def cons(s: String): Part = {
-      val stubs = s.split(" ", -1).toList
-      stubs.size match {
-        case 0 => Part("", 0, "")
-        case 1 => Part(stubs.head, 0, "")
-        case n => Part(stubs.head, n - 2, stubs.last)
-      }
+    private def cons(s: String): Part = s.foldLeft(Part("", 0, "")) {
+      case (Part(l, 0, ""), ' ') => Part(l, 0, "")
+      case (Part(l, 0, ""), c) => Part(l + c, 0, "")
+      case (Part(l, n, ""), ' ') => Part(l, n, "")
+      case (Part(l, n, r), ' ') => Part(l, n + 1, "")
+      case (Part(l, n, r), c) => Part(l, n, r + c)
     }
 
     def zero: WC = Part("", 0, "")

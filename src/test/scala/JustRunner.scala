@@ -1,5 +1,7 @@
 import lazyness.Stream
-import propertytesting2.{Gen, Prop}
+import monoids.{Monoid, Stub, WC}
+import propertytesting2.Gen.**
+import propertytesting2.{Gen, Prop, SGen}
 import propertytesting2.Prop.Result
 import state.RNG
 
@@ -18,11 +20,29 @@ object JustRunner {
     def run1(p: Prop): Result = p.run(5, 20, r0)
     def run2(p: Prop): Result = p.run(100, 100, r0)
     def run3(p: Prop): Result = p.run(11, 500, r0)
+    def run_0(p: Prop): Result = p.run(9, 300, r0)
+    def monoidLaws[A](m: Monoid[A])(g: SGen[A]): Prop =
+      Prop.forAll(g ** g ** g) { case a ** b ** c =>
+        val left = m.op(a, m.op(b, c))
+        val right = m.op(m.op(a, b), c)
+        left == right
+      }
+
+    run_0(monoidLaws[WC](Monoid.wcMonoid)(Gen.string.map(Stub)))
 
 
-    val sized2 = Prop.forAll(Gen.choose(0, 10).listOf)(_.forall(_ < 10))
-
-    run3(sized2)
+    val m = Monoid.wcMonoid
+    // Left(((Stub(Cx),Stub( 9)),Stub(L )))
+//    val a = Stub("Cx")
+//    val b = Stub(" 9")
+//    val c = Stub("L ")
+    //Left(((Stub(),Stub()),Stub()))
+    val a = Stub("")
+    val b = Stub("")
+    val c = Stub("")
+    val left = m.op(a, m.op(b, c))
+    val right = m.op(m.op(a, b), c)
+    right == left
   }
 
 }
