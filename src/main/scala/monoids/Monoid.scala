@@ -88,6 +88,11 @@ object Monoid {
   def concatenate[A](as: List[A], m: Monoid[A]): A =
     as.foldLeft(m.zero)(m.op)
 
+  def splitCount(s: String): Int =
+    if (s.length > 10)
+      splitCount(s.substring(0, 100)) + splitCount(s.substring(100))
+    else 0
+
   def foldMap[A, B](as: List[A], m: Monoid[B])(f: A => B): B =
     as.foldLeft(m.zero)((b, a) => m.op(b, f(a)))
 
