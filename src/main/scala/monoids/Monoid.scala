@@ -90,8 +90,11 @@ object Monoid {
 
   def splitCount(s: String): Int =
     if (s.length > 10)
-      splitCount(s.substring(0, 100)) + splitCount(s.substring(100))
-    else 0
+      splitCount(s.substring(0, 10)) + splitCount(s.substring(10))
+    else wcMonoid.op(wcMonoid.zero, Stub(s)) match {
+      case Part(l, n, r) =>
+        l.headOption.fold(0)(_ => 1) + n + r.headOption.fold(0)(_ => 1)
+    }
 
   def foldMap[A, B](as: List[A], m: Monoid[B])(f: A => B): B =
     as.foldLeft(m.zero)((b, a) => m.op(b, f(a)))

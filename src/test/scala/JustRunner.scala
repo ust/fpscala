@@ -31,18 +31,7 @@ object JustRunner {
     run_0(monoidLaws[WC](Monoid.wcMonoid)(Gen.string.map(Stub)))
 
 
-    val m = Monoid.wcMonoid
-    // Left(((Stub(Cx),Stub( 9)),Stub(L )))
-//    val a = Stub("Cx")
-//    val b = Stub(" 9")
-//    val c = Stub("L ")
-    //Left(((Stub(),Stub()),Stub()))
-    val a = Stub("")
-    val b = Stub("")
-    val c = Stub("")
-    val left = m.op(a, m.op(b, c))
-    val right = m.op(m.op(a, b), c)
-    right == left
+    Monoid.splitCount(" one two")
   }
 
 }
