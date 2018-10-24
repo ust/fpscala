@@ -17,8 +17,12 @@ Monoid.concatenate(List("abc", "1", "2", "3"), Monoid.stringMonoid)
 Monoid.foldMap(List(999, 1, 2, 3), Monoid.stringMonoid)(_.toString)
 Monoid.foldLeft(List(1, 2, 3))("hui")(_ + _)
 Monoid.foldRight(List(1, 2, 3))("hui")(_.toString + _)
+Monoid.splitCount(" ")
+Monoid.splitCount("one")
 Monoid.splitCount(" one two")
-Monoid.splitCount("one  two three 12 f")
+Monoid.splitCount(" one two ")
+Monoid.splitCount("one  two three ")
+Monoid.splitCount("one  two  three ")
 
 "-----------------------------------------------------------------"
 

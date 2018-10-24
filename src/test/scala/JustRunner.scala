@@ -28,10 +28,16 @@ object JustRunner {
         left == right
       }
 
-    run_0(monoidLaws[WC](Monoid.wcMonoid)(Gen.string.map(Stub)))
+    val wcMonoid = Monoid.wcMonoid
+    run_0(monoidLaws[WC](wcMonoid)(Gen.string.map(Stub)))
 
-
-    Monoid.splitCount(" one two")
+    val a = Stub("Cx")
+    val b = Stub(" 9")
+    val c = Stub("L ")
+    val l = wcMonoid.op(a, wcMonoid.op(b, c))
+    val r = wcMonoid.op(wcMonoid.op(a, b), c)
+    l == r
+    Monoid.splitCount("one  two three ")
   }
 
 }

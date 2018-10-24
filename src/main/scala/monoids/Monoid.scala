@@ -57,10 +57,10 @@ object Monoid {
     }
 
     private def cons(s: String): Part = s.foldLeft(Part("", 0, "")) {
-      case (Part(l, 0, ""), ' ') => Part(l, 0, "")
+      case (Part(l, 0, ""), ' ') => Part(l, 0, " ")
       case (Part(l, 0, ""), c) => Part(l + c, 0, "")
-      case (Part(l, n, ""), ' ') => Part(l, n, "")
-      case (Part(l, n, r), ' ') => Part(l, n + 1, "")
+      case (Part(l, n, " "), ' ') => Part(l, n, " ")
+      case (Part(l, n, " "), c) => Part(l, n + 1, "" + c)
       case (Part(l, n, r), c) => Part(l, n, r + c)
     }
 
@@ -91,7 +91,7 @@ object Monoid {
   def splitCount(s: String): Int =
     if (s.length > 10)
       splitCount(s.substring(0, 10)) + splitCount(s.substring(10))
-    else wcMonoid.op(wcMonoid.zero, Stub(s)) match {
+    else wcMonoid.op(wcMonoid.zero, wcMonoid.op(Stub(s), wcMonoid.zero)) match {
       case Part(l, n, r) =>
         l.headOption.fold(0)(_ => 1) + n + r.headOption.fold(0)(_ => 1)
     }
