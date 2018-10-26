@@ -48,20 +48,17 @@ object Monoid {
   val wcMonoid: Monoid[WC] = new Monoid[WC] {
     def op(a1: WC, a2: WC): WC = (a1, a2) match {
       case (Stub(a), Stub(b)) => cons(a + b)
-      case (Stub(s), Part(l, n, r)) => op(cons(s + l), Part("", n, r))
-      case (Part(l, n, r), Stub(s)) => op(Part(l, n, ""), cons(r + s))
-      case (Part(l, 0, ""), Part(s, n, r)) => Part(l + s, n, r)
-      case (Part(l, n, s1), Part(s2, 0, "")) => Part(l, n, s1 + s2)
-      case (Part(l, n1, a), Part(b, n2, r)) =>
-        Part(l, n1 + (a + b).headOption.fold(0)(_ => 1) + n2, r)
+      case (Stub(l), Part(m, n, r)) => op(cons(s"$l$m "), Part("", n, r))
+      case (Part(l, n, m), Stub(r)) => op(Part(l, n, ""), cons(s" $m$r"))
+      case (Part(l, n1, m1), Part(m2, n2, r)) =>
+        Part(l, n1 + s"$m1$m2".oneOrZero + n2, r)
     }
 
-    private def cons(s: String): Part = s.foldLeft(Part("", 0, "")) {
-      case (Part(l, 0, ""), ' ') => Part(l, 0, " ")
-      case (Part(l, 0, ""), c) => Part(l + c, 0, "")
-      case (Part(l, n, " "), ' ') => Part(l, n, " ")
-      case (Part(l, n, " "), c) => Part(l, n + 1, "" + c)
-      case (Part(l, n, r), c) => Part(l, n, r + c)
+    private def cons(str: String): WC = str.foldLeft[WC](Stub("")) {
+      case (Stub(s),        ' ' ) => Part(s, 0, "")
+      case (Stub(s),        c   ) => Stub(s + c)
+      case (Part(l, n, r),  ' ' ) => Part(l, n + r.oneOrZero, "")
+      case (Part(l, n, r),  c   ) => Part(l, n, r + c)
     }
 
     def zero: WC = Part("", 0, "")
@@ -88,13 +85,17 @@ object Monoid {
   def concatenate[A](as: List[A], m: Monoid[A]): A =
     as.foldLeft(m.zero)(m.op)
 
-  def splitCount(s: String): Int =
-    if (s.length > 10)
-      splitCount(s.substring(0, 10)) + splitCount(s.substring(10))
-    else wcMonoid.op(wcMonoid.zero, wcMonoid.op(Stub(s), wcMonoid.zero)) match {
-      case Part(l, n, r) =>
-        l.headOption.fold(0)(_ => 1) + n + r.headOption.fold(0)(_ => 1)
+  def splitCount(s: String, chunkSize: Int = 10): Int = {
+    def go(chunk: String): WC = if (chunk.length > chunkSize)
+      wcMonoid.op(go(chunk.substring(0, chunkSize)), go(chunk.substring(chunkSize)))
+    else Stub(chunk)
+
+    wcMonoid.op(wcMonoid.zero, wcMonoid.op(go(s), wcMonoid.zero)) match {
+      case Part(l, n, r) => l.oneOrZero + n + r.oneOrZero
+      case _ => 1
     }
+  }
+
 
   def foldMap[A, B](as: List[A], m: Monoid[B])(f: A => B): B =
     as.foldLeft(m.zero)((b, a) => m.op(b, f(a)))
@@ -105,5 +106,7 @@ object Monoid {
   def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B): B =
     foldMap(as, endoMonoid[B])(a => f(a, _))(z)
 
-
+  implicit class StringOneOrZero(string: String) {
+    def oneOrZero: Int = string.headOption.fold(0)(_ => 1)
+  }
 }
