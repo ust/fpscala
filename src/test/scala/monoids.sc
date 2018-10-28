@@ -13,8 +13,13 @@ wordsMonoid.op("Hic", wordsMonoid.op("est ", "chorda ")) ==
 wordsMonoid.op("Hic ", wordsMonoid.op(" est", "chorda")) ==
   "Hic est chorda"
 
+Monoid.isOrdered(Vector())
+Monoid.isOrdered(Vector(1, 1))
+Monoid.isOrdered(Vector(-10, 0, 1, 10))
+Monoid.isOrdered(Vector(-10, 0, -1, 10, 10))
 Monoid.concatenate(List("abc", "1", "2", "3"), Monoid.stringMonoid)
 Monoid.foldMap(List(999, 1, 2, 3), Monoid.stringMonoid)(_.toString)
+Monoid.foldMapV(Vector(999, 1, 2, 3), Monoid.stringMonoid)(_.toString)
 Monoid.foldLeft(List(1, 2, 3))("hui")(_ + _)
 Monoid.foldRight(List(1, 2, 3))("hui")(_.toString + _)
 Monoid.splitCount("")

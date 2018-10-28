@@ -87,7 +87,8 @@ object Monoid {
 
   def splitCount(s: String, chunkSize: Int = 10): Int = {
     def go(chunk: String): WC = if (chunk.length > chunkSize)
-      wcMonoid.op(go(chunk.substring(0, chunkSize)), go(chunk.substring(chunkSize)))
+      wcMonoid.op(go(chunk.substring(0, chunkSize)),
+        go(chunk.substring(chunkSize)))
     else Stub(chunk)
 
     wcMonoid.op(wcMonoid.zero, wcMonoid.op(go(s), wcMonoid.zero)) match {
@@ -100,11 +101,31 @@ object Monoid {
   def foldMap[A, B](as: List[A], m: Monoid[B])(f: A => B): B =
     as.foldLeft(m.zero)((b, a) => m.op(b, f(a)))
 
+  def foldMapV[A,B](v: IndexedSeq[A], m: Monoid[B])(f: A => B): B = {
+    val l = v.length
+    if (l > 2) {
+      val chunks = v.splitAt(l / 2)
+      m.op(foldMapV(chunks._1, m)(f), foldMapV(chunks._2, m)(f))
+    } else l match {
+      case 0 => m.zero
+      case 1 => f(v(0))
+      case 2 => m.op(f(v(0)), f(v(1)))
+    }
+  }
+
   def foldLeft[A, B](as: List[A])(z: B)(f: (B, A) => B): B =
     foldMap(as, endoMonoid[B])(a => f(_, a))(z)
 
   def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B): B =
     foldMap(as, endoMonoid[B])(a => f(a, _))(z)
+
+  def isOrdered(v: IndexedSeq[Int]): Boolean =
+    foldMapV(v, new Monoid[Int => Option[Int]] {
+      def op(a1: Int => Option[Int], a2: Int => Option[Int]): Int => Option[Int] =
+        i1 => a1(i1).flatMap(i2 => a2(i2))
+
+      def zero: Int => Option[Int] = Some(_)
+    })(i1 => i2 => if (i1 >= i2) Some(i1) else None)(Int.MinValue).nonEmpty
 
   implicit class StringOneOrZero(string: String) {
     def oneOrZero: Int = string.headOption.fold(0)(_ => 1)
