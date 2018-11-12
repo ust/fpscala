@@ -9,10 +9,10 @@ case class Branch[A](left: Tree[A], right: Tree[A])
 
 object Tree {
 
-  def fold[A, B](t: Tree[A], z: (B, B) => B)(m: A => B): B =
+  def fold[A, B](t: Tree[A], z: (B, B) => B)(f: A => B): B =
     t match {
-      case Leaf(a) => m(a)
-      case Branch(l, r) => z(fold(l, z)(m), fold(r, z)(m))
+      case Leaf(a) => f(a)
+      case Branch(l, r) => z(fold(l, z)(f), fold(r, z)(f))
     }
 
   def size[A](t: Tree[A]): Int =
