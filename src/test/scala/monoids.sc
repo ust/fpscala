@@ -1,7 +1,7 @@
 import monoids.{Monoid, Stub, WC}
+import propertytesting2.Gen.**
 import propertytesting2.Prop.Result
 import propertytesting2.{Gen, Prop, SGen}
-import propertytesting2.Gen.**
 import state.RNG
 
 val r0 = RNG.simple(0)
@@ -46,6 +46,15 @@ run(Prop.forAll(Gen.string)(str => {
   val m = Monoid.stringMonoid
   m.op(str, m.zero) == str
 }))
+val smallInt = Gen.choose(0, 4)
+val eitherIntOrBool: Gen[Either[Boolean, Int]] =
+  Gen.boolean.flatMap(b =>
+    if (b) Gen.boolean.map(Left(_)) else smallInt.map(Right(_)))
+val smalIntAndBool = smallInt ** Gen.boolean
+val product = Monoid.productMonoid(Monoid.intAddition, Monoid.booleanAnd)
+val coproduct = Monoid.coproductMonoid(Monoid.booleanAnd, Monoid.intAddition)
+run(monoidLaws(product)(smalIntAndBool.unsized))
+run(monoidLaws(coproduct)(eitherIntOrBool.unsized))
 run(monoidLaws(Monoid.intAddition)(Gen.choose(0, 4).unsized))
 run(monoidLaws(Monoid.intMultiplication)(Gen.choose(0, 4).unsized))
 run(monoidLaws(Monoid.booleanOr)(Gen.boolean.unsized))
