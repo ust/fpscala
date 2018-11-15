@@ -28,14 +28,22 @@ object Monoid {
 
   def coproductMonoid[A, B](A: Monoid[A], B: Monoid[B]): Monoid[Either[A, B]] =
     new Monoid[Either[A, B]] {
-      override def op(a1: Either[A, B], a2: Either[A, B]): Either[A, B] = (a1, a2) match {
-        case (Left(x),  Left(y))  => Left(A.op(x, y))
-        case (Left(x),  _)        => Left(x)
-        case (Right(x), Right(y)) => Right(B.op(x, y))
-        case (_,        Left(y))  => Left(y)
-      }
+      override def op(a1: Either[A, B], a2: Either[A, B]): Either[A, B] =
+        (a1, a2) match {
+          case (Left(x),  Left(y))  => Left(A.op(x, y))
+          case (Left(x),  _)        => Left(x)
+          case (Right(x), Right(y)) => Right(B.op(x, y))
+          case (_,        Left(y))  => Left(y)
+        }
 
       override def zero: Either[A, B] = Left(A.zero)
+    }
+
+  def functionMonoid[A, B](B: Monoid[B]): Monoid[A => B] =
+    new Monoid[A => B] {
+      def op(a1: A => B, a2: A => B): A => B = a => B.op(a1(a), a2(a))
+
+      def zero: A => B = _ => B.zero
     }
 
   val stringMonoid: Monoid[String] = new Monoid[String] {
@@ -122,6 +130,9 @@ object Monoid {
     }
   }
 
+  def frequencyMap(strings: IndexedSeq[String]): Map[String, Int] =
+    foldMapV[String, Map[String, Int]](strings,
+      mapMergeMonoid(intAddition))(s => Map(s -> 1))
 
   def foldMap[A, B](as: List[A], m: Monoid[B])(f: A => B): B =
     as.foldLeft(m.zero)((b, a) => m.op(b, f(a)))
@@ -143,6 +154,16 @@ object Monoid {
 
   def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B): B =
     foldMap(as, endoMonoid[B])(a => f(a, _))(z)
+
+  def mapMergeMonoid[K, V](V: Monoid[V]): Monoid[Map[K, V]] =
+    new Monoid[Map[K, V]] {
+      def zero = Map()
+
+      def op(a: Map[K, V], b: Map[K, V]): Map[K, V] =
+        a.map {
+          case (k, v) => (k, V.op(v, b.getOrElse(k, V.zero)))
+        }
+    }
 
   def isOrdered(v: IndexedSeq[Int]): Boolean =
     foldMapV(v, new Monoid[Int => Option[Int]] {
