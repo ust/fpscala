@@ -35,6 +35,7 @@ trait SGen[+A] {
     case (Unsized(g), Unsized(g2)) => Unsized(g ** g2)
     case (Sized(g), Unsized(g2)) => Sized(n => g(n) ** g2)
     case (Unsized(g), Sized(g2)) => Sized(n => g ** g2(n))
+    case (_, _) => throw new IllegalArgumentException("Failed to match complex Gen")
   }
 }
 
