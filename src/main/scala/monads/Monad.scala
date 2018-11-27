@@ -59,10 +59,13 @@ object Monad {
       ma flatMap f
   }
 
-  val stateMonad: Monad[State] = ???
-  //    new Monad[State] {
-  //    def unit[A](a: => A): State[A] = ???
-  //
-  //    def flatMap[A, B](ma: State[A])(f: A => State[B]): State[B] = ???
-  //  }
+  def stateMonad[S]: Monad[State[S, _]] = {
+    type State2[AA] = State[S, AA]
+    new Monad[State2] {
+      def unit[A](a: => A): State2[A] = State.unit[S, A](a)
+
+      def flatMap[A, B](ma: State2[A])(f: A => State2[B]): State2[B] =
+        ma.flatMap[B](f)
+    }
+  }
 }
