@@ -21,6 +21,13 @@ trait Monad[M[_]] extends Functor[M] {
 
   def map2[A, B, C](ma: M[A], mb: M[B])(f: (A, B) => C): M[C] =
     flatMap(ma)(a => map(mb)(b => f(a, b)))
+
+  def sequence[A](lma: List[M[A]]): M[List[A]] = ???
+
+  def traverse[A,B](la: List[A])(f: A => M[B]): M[List[B]] =
+    la.foldLeft(unit(List.empty[B])) { (lm, a) =>
+      flatMap(lm)(l => map(f(a))(_ :: l))
+    }
 }
 
 object Monad {
@@ -59,13 +66,6 @@ object Monad {
       ma flatMap f
   }
 
-  def stateMonad[S]: Monad[State[S, _]] = {
-    type State2[AA] = State[S, AA]
-    new Monad[State2] {
-      def unit[A](a: => A): State2[A] = State.unit[S, A](a)
+  def stateMonad[S]: Monad[State] = ???
 
-      def flatMap[A, B](ma: State2[A])(f: A => State2[B]): State2[B] =
-        ma.flatMap[B](f)
-    }
-  }
 }
