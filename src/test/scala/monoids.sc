@@ -1,7 +1,7 @@
 import monoids.{Monoid, Stub, WC}
-import propertytesting2.Gen.**
-import propertytesting2.Prop.Result
-import propertytesting2.{Gen, Prop, SGen}
+import propertytesting.Gen.**
+import propertytesting.Prop.Result
+import propertytesting.{Gen, Prop, SGen}
 import state.RNG
 
 val r0 = RNG.simple(0)

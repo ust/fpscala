@@ -1,6 +1,6 @@
 import lazyness.Stream
-import propertytesting2.Prop.Result
-import propertytesting2.{Gen, Prop}
+import propertytesting.Prop.Result
+import propertytesting.{Gen, Prop}
 import state.RNG
 
 val r0 = RNG.simple(0)

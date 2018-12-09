@@ -2,7 +2,7 @@ package monads
 
 import parallelism.Par
 import parallelism.Par.Par
-import propertytesting2.Gen
+import propertytesting.Gen
 import state.State
 
 import scala.language.higherKinds
@@ -33,9 +33,17 @@ trait Monad[M[_]] extends Functor[M] {
     }
 
   def replicateM[A](n: Int, ma: M[A]): M[List[A]] = n match {
-    case 0 => unit(List.empty)
+    case 0 => map(ma)(_ => List.empty)
     case 1 => map(ma)(List(_))
-    case i => flatMap(ma)(a => map(replicateM(i - 1, ma))(a :: _))
+    case i => flatMap(replicateM(i - 1, ma))(l => map(ma)(_ :: l))
+  }
+
+  def factor[A,B](ma: M[A], mb: M[B]): M[(A, B)] =
+    map2(ma, mb)((_, _))
+
+  def cofactor[A,B](e: Either[M[A], M[B]]): M[Either[A, B]] = e match {
+    case Left(a) => map(a)(Left(_))
+    case Right(b) => map(b)(Right(_))
   }
 }
 
@@ -75,6 +83,6 @@ object Monad {
       ma flatMap f
   }
 
-  def stateMonad[S]: Monad[State] = ???
+//  def stateMonad[S]: Monad[State] = ???
 
 }
