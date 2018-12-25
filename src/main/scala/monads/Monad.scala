@@ -38,13 +38,16 @@ trait Monad[M[_]] extends Functor[M] {
     case i => flatMap(replicateM(i - 1, ma))(l => map(ma)(_ :: l))
   }
 
-  def factor[A,B](ma: M[A], mb: M[B]): M[(A, B)] =
+  def factor[A, B](ma: M[A], mb: M[B]): M[(A, B)] =
     map2(ma, mb)((_, _))
 
-  def cofactor[A,B](e: Either[M[A], M[B]]): M[Either[A, B]] = e match {
+  def cofactor[A, B](e: Either[M[A], M[B]]): M[Either[A, B]] = e match {
     case Left(a) => map(a)(Left(_))
     case Right(b) => map(b)(Right(_))
   }
+
+  def compose[A, B, C](f: A => M[B], g: B => M[C]): A => M[C] =
+    a => flatMap(f(a))(g)
 }
 
 object Monad {
@@ -83,6 +86,6 @@ object Monad {
       ma flatMap f
   }
 
-//  def stateMonad[S]: Monad[State] = ???
+  //  def stateMonad[S]: Monad[State] = ???
 
 }
