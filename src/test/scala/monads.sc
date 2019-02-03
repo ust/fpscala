@@ -22,19 +22,27 @@ val genFnStrInt: Gen[String => Option[Int]] =
     case true => s => Some(s.length)
     case _ => _ => None
   }
-def prop1[A, M[_]](gen: SGen[((M[A], A => M[A]), A => M[A])])
+def lawFlatMap[A, M[_]](gen: SGen[((M[A], A => M[A]), A => M[A])])
                   (m: Monad[M]) =
   Prop.forAll(gen) {
     case ((x, f), g) =>
       m.flatMap(m.flatMap(x)(f))(g) == m.flatMap(x)(a => m.flatMap(f(a))(g))
   }
-def prop2[A, B, C, D, M[_]](gen: SGen[(((A => M[B], B => M[C]), C => M[D]), A)])
+def lawCompose[A, B, C, D, M[_]](gen: SGen[(((A => M[B], B => M[C]), C => M[D]), A)])
                            (m: Monad[M]) =
   Prop.forAll(gen) {
     case (((f, g), h), i) =>
       m.compose(m.compose(f, g), h)(i) == m.compose(f, m.compose(g, h))(i)
   }
+def lawComposeUnit[A, B, C, D, M[_]](gen: SGen[(A => M[B], A)])
+                                    (m: Monad[M]) =
+  Prop.forAll(gen) { case (f, a) =>
+    m.compose(m.unit[A], f)(a) == f(a)
+  } && Prop.forAll(gen) { case (f, a) =>
+    m.compose(f, (x: B) => m.unit[B](x))(a) == f(a)
+  }
 
-run0(prop1((genOptInt ** genFnIntInt ** genFnIntInt).unsized)(Monad.optionMonad))
-run0(prop2((genFnIntStr ** genFnStrInt ** genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
+run0(lawFlatMap((genOptInt ** genFnIntInt ** genFnIntInt).unsized)(Monad.optionMonad))
+run0(lawCompose((genFnIntStr ** genFnStrInt ** genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
+run0(lawComposeUnit((genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
 
