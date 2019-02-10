@@ -22,27 +22,52 @@ val genFnStrInt: Gen[String => Option[Int]] =
     case true => s => Some(s.length)
     case _ => _ => None
   }
-def lawFlatMap[A, M[_]](gen: SGen[((M[A], A => M[A]), A => M[A])])
+def lawAssociativeFlatMap[A, M[_]](gen: SGen[((M[A], A => M[A]), A => M[A])])
                   (m: Monad[M]) =
   Prop.forAll(gen) {
     case ((x, f), g) =>
       m.flatMap(m.flatMap(x)(f))(g) == m.flatMap(x)(a => m.flatMap(f(a))(g))
   }
-def lawCompose[A, B, C, D, M[_]](gen: SGen[(((A => M[B], B => M[C]), C => M[D]), A)])
+def lawAssociativeCompose[A, B, C, D, M[_]](gen: SGen[(((A => M[B], B => M[C]), C => M[D]), A)])
                            (m: Monad[M]) =
   Prop.forAll(gen) {
     case (((f, g), h), i) =>
       m.compose(m.compose(f, g), h)(i) == m.compose(f, m.compose(g, h))(i)
   }
-def lawComposeUnit[A, B, C, D, M[_]](gen: SGen[(A => M[B], A)])
+def lawIdentityCompose[A, B, C, D, M[_]](gen: SGen[(A => M[B], A)])
                                     (m: Monad[M]) =
   Prop.forAll(gen) { case (f, a) =>
-    m.compose(m.unit[A], f)(a) == f(a)
-  } && Prop.forAll(gen) { case (f, a) =>
-    m.compose(f, (x: B) => m.unit[B](x))(a) == f(a)
+    val func1: A => M[B] = m.compose(m.unit[A](_), f)
+    val func2: A => M[B] = m.compose(f, (x: B) => m.unit[B](x))
+    func1(a) == f(a) && func1(a) == func2(a)
+  }
+def lawIdentityFlatMap[A, B, C, D, M[_]](gen: SGen[(A => M[B], A)])
+                                    (m: Monad[M]) =
+  Prop.forAll(gen) { case (f, a) =>
+    val func1: A => M[B] = x => m.flatMap(f(x))(m.unit[B](_))
+    val func2: A => M[B] = x => m.flatMap(m.unit(x))(f)
+    func1(a) == func2(a) && func1(a) == f(a)
+  }
+def lawIdentityJoin[A, B, C, D, M[_]](gen: SGen[(A => M[B], A)])
+                                    (m: Monad[M]) =
+  Prop.forAll(gen) { case (f, a) =>
+    val func1: A => M[B] = x => m.join(m.map(f(x))(m.unit[B](_)))
+    val func2: A => M[B] = x => m.join(m.map(m.unit[A](x))(f))
+    func1(a) == func2(a) && func1(a) == f(a)
+  }
+def lawAssociativeJoin[A, B, C, D, M[_]](gen: SGen[(((A => M[B], B => M[C]), C => M[D]), A)])
+                                           (m: Monad[M]) =
+  Prop.forAll(gen) {
+    case (((f, g), h), i) =>
+      val func1: A => M[D] = x => m.join(m.map(m.join(m.map(f(x))(g)))(h))
+      val func2: A => M[D] = x => m.join(m.map(f(x))(y => m.join(m.map(g(y))(h))))
+      func1(i) == func2(i)
   }
 
-run0(lawFlatMap((genOptInt ** genFnIntInt ** genFnIntInt).unsized)(Monad.optionMonad))
-run0(lawCompose((genFnIntStr ** genFnStrInt ** genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
-run0(lawComposeUnit((genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
+run0(lawAssociativeFlatMap((genOptInt ** genFnIntInt ** genFnIntInt).unsized)(Monad.optionMonad))
+run0(lawAssociativeCompose((genFnIntStr ** genFnStrInt ** genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
+run0(lawIdentityCompose((genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
+run0(lawIdentityFlatMap((genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
+run0(lawIdentityJoin((genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
+run0(lawAssociativeJoin((genFnIntStr ** genFnStrInt ** genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
 

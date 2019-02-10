@@ -3,7 +3,6 @@ package monads
 import parallelism.Par
 import parallelism.Par.Par
 import propertytesting.Gen
-import state.State
 
 import scala.language.higherKinds
 
@@ -31,7 +30,7 @@ trait Monad[M[_]] extends Functor[M] {
     la.foldLeft(unit(List.empty[B])) { (lm, a) =>
       flatMap(lm)(l => map(f(a))(_ :: l))
     }
-
+  
   def replicateM[A](n: Int, ma: M[A]): M[List[A]] = n match {
     case 0 => map(ma)(_ => List.empty)
     case 1 => map(ma)(List(_))
@@ -50,6 +49,20 @@ trait Monad[M[_]] extends Functor[M] {
     a => flatMap(f(a))(g)
 
   def flatMapC[A, B](ma: M[A])(f: A => M[B]): M[B] = compose((_: Unit) => ma, f)()
+
+  def join[A](mma: M[M[A]]): M[A] = flatMap(mma)(identity)
+
+  def flatMapJ[A, B](ma: M[A])(f: A => M[B]): M[B] = join(map(ma)(f))
+
+  def composeJ[A, B, C](f: A => M[B], g: B => M[C]): A => M[C] =
+    a => join(map(f(a))(g))
+
+}
+
+case class Id[A](value: A) {
+  def map[B](f: A => B): Id[B] = Id(f(value))
+
+  def flatMap[B](f: A => Id[B]): Id[B] = f(value)
 }
 
 object Monad {
@@ -88,6 +101,10 @@ object Monad {
       ma flatMap f
   }
 
-  //  def stateMonad[S]: Monad[State] = ???
+  val idMonad: Monad[Id] = new Monad[Id] {
+    override def unit[A](a: => A): Id[A] = Id(a)
+
+    override def flatMap[A, B](ma: Id[A])(f: A => Id[B]): Id[B] = ma.flatMap(f)
+  }
 
 }
