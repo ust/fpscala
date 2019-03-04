@@ -5,6 +5,7 @@ import parallelism.Par.Par
 import propertytesting.Gen
 import state.State
 
+import scala.annotation.tailrec
 import scala.language.higherKinds
 
 trait Functor[F[_]] {
@@ -19,31 +20,7 @@ trait Monad[M[_]] extends Applicative[M] {
   override def apply[A, B](mf: M[A => B])(ma: M[A]): M[B] =
     flatMap(mf)(f => map[A, B](ma)(a => f(a)))
 
-  override def sequence[A](lma: List[M[A]]): M[List[A]] =
-    lma.foldLeft(unit(List.empty[A])) { (lm, m) =>
-      flatMap(lm)(l => map(m)(_ :: l))
-    }
-
-  override def traverse[A, B](la: List[A])(f: A => M[B]): M[List[B]] =
-    la.foldLeft(unit(List.empty[B])) { (lm, a) =>
-      flatMap(lm)(l => map(f(a))(_ :: l))
-    }
-
-  override def replicateM[A](n: Int, ma: M[A]): M[List[A]] = n match {
-    case 0 => map(ma)(_ => List.empty)
-    case 1 => map(ma)(List(_))
-    case i => flatMap(replicateM(i - 1, ma))(l => map(ma)(_ :: l))
-  }
-
-  def factor[A, B](ma: M[A], mb: M[B]): M[(A, B)] =
-    map2(ma, mb)((_, _))
-
-  override def cofactor[A, B](e: Either[M[A], M[B]]): M[Either[A, B]] = e match {
-    case Left(a) => map(a)(Left(_))
-    case Right(b) => map(b)(Right(_))
-  }
-
-  override def compose[A, B, C](f: A => M[B], g: B => M[C]): A => M[C] =
+  def compose[A, B, C](f: A => M[B], g: B => M[C]): A => M[C] =
     a => flatMap(f(a))(g)
 
   def flatMapC[A, B](ma: M[A])(f: A => M[B]): M[B] = compose((_: Unit) => ma, f)()
@@ -73,19 +50,27 @@ trait Applicative[F[_]] extends Functor[F] {
   def mapM[A,B](a: F[A])(f: A => B): F[B] = map2(unit(f), a)(_(_))
 
   def sequence[A](fas: List[F[A]]): F[List[A]] =
-    fas.foldLeft(unit(List.empty[A])) {
-      case (fs, fa) => map2(fs, map(fa)(_ :: Nil))(_ ++ _)
+    fas.foldLeft(unit(List.empty[A]))(map2(_, _) { case (l, a) => a :: l })
+
+  def traverse[A, B](as: List[A])(f: A => F[B]): F[List[B]] =
+    sequence(as.map(f))
+
+  def replicateM[A](n: Int, fa: F[A]): F[List[A]] = {
+    @tailrec
+    def rpl(acc: F[List[A]], fa: F[A], n: Int): F[List[A]] = n match {
+      case x if x < 0 => throw new IllegalArgumentException("n shouldn't be negative")
+      case 0          => acc
+      case x          => rpl(map2(fa, acc)(_ :: _), fa, x - 1)
     }
+    rpl(unit(Nil), fa, n)
+  }
 
-  def traverse[A, B](as: List[A])(f: A => F[B]): F[List[B]] = ???
+  def factor[A, B](fa: F[A], fb: F[B]): F[(A, B)] = map2(fa, fb)((_, _))
 
-  def replicateM[A](n: Int, fa: F[A]): F[List[A]] = ???
-
-  def factor[A, B](fa: F[A], fb: F[A]): F[(A, B)] = ???
-
-  def cofactor[A, B](e: Either[F[A], F[B]]): F[Either[A, B]] = ???
-
-  def compose[A, B, C](f: A => F[B], g: B => F[C]): A => F[C] = ???
+  def cofactor[A, B](e: Either[F[A], F[B]]): F[Either[A, B]] = e match {
+    case Left(a) => map(a)(Left(_))
+    case Right(b) => map(b)(Right(_))
+  }
 }
 
 
@@ -141,13 +126,19 @@ object Monad {
     override def flatMap[A, B](ma: Id[A])(f: A => Id[B]): Id[B] = ma.flatMap(f)
   }
 
-  def stateMonad[S]: Monad[State[S, _]] = new Monad[
-    ({type lambda[x] = State[S, x]})#lambda] {
+  def stateMonad[S]: Monad[State[S, _]] =
+    new Monad[({type lambda[x] = State[S, x]})#lambda] {
+      def unit[A](a: => A): State[S, A] = State(s => (a, s))
 
-    def unit[A](a: => A): State[S, A] = State(s => (a, s))
+      def flatMap[A, B](st: State[S, A])(f: A => State[S, B]): State[S, B] =
+        st flatMap f
+    }
 
-    def flatMap[A, B](st: State[S, A])(f: A => State[S, B]): State[S, B] =
-      st flatMap f
-  }
+  def eitherMonad[E]: Monad[Either[E, _]] =
+    new Monad[({type f[x] = Either[E, x]})#f] {
+      def unit[A](a: => A): Either[E, A] = Right(a)
 
+      def flatMap[A, B](ma: Either[E, A])(f: A => Either[E, B]): Either[E, B] =
+        ma flatMap f
+    }
 }
