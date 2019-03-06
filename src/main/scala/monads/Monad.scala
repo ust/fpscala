@@ -1,5 +1,8 @@
 package monads
 
+import java.text.SimpleDateFormat
+import java.util.Date
+
 import parallelism.Par
 import parallelism.Par.Par
 import propertytesting.Gen
@@ -141,4 +144,56 @@ object Monad {
       def flatMap[A, B](ma: Either[E, A])(f: A => Either[E, B]): Either[E, B] =
         ma flatMap f
     }
+}
+
+object Applicative {
+  def validationApplicative[E]: Applicative[Validation[E, _]] =
+    new Applicative[({type lambda[x] = Validation[E, x]})#lambda] {
+      def apply[A, B](fab: Validation[E, A => B])(fa: Validation[E, A]): Validation[E, B] =
+        (fab, fa) match {
+          case (Success(ab),   Success(a)     ) => Success(ab(a))
+          case (Failure(h, t), Failure(h0, t0)) => Failure[E](h0, (t0 :+ h) ++ t)
+          case (f: Failure[E], _              ) => f
+          case (_,             f: Failure[E]  ) => f
+          case _                                => throw new IllegalArgumentException
+        }
+
+      def unit[A](a: => A): Validation[E, A] = Success(a)
+    }
+}
+
+sealed trait Validation[+E, +A]
+
+case class Failure[E](head: E, tail: Vector[E] = Vector.empty) extends Validation[E, Nothing]
+
+case class Success[A](a: A) extends Validation[Nothing, A]
+
+case class WebForm(name: String, birthDate: Date, phoneNumber: String)
+
+object WebForm {
+  def validName(name: String): Validation[String, String] =
+    if (name != "")
+      Success(name)
+    else Failure("Name cannot be empty")
+
+  def validBirthDate(birthDate: String): Validation[String, Date] =
+    try {
+      Success(new SimpleDateFormat("yyyy-MM-dd").parse(birthDate))
+    } catch {
+      case _: Throwable => Failure("Birthdate must be in the form yyyy-MM-dd")
+    }
+
+  def validPhone(phoneNumber: String): Validation[String, String] =
+    if (phoneNumber.matches("[0-9]{10}"))
+      Success(phoneNumber)
+    else Failure("Phone number must be 10 digits")
+
+  def validWebForm(name: String,
+                   birthdate: String,
+                   phone: String): Validation[String, WebForm] =
+//    apply(apply(apply((WebForm(_, _, _)).curried)(
+//      validName(name)))(
+//      validBirthdate(birthdate)))(
+//      validPhone(phone))
+    ???
 }
