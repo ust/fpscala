@@ -15,28 +15,6 @@ trait Functor[F[_]] {
   def map[A, B](fa: F[A])(f: A => B): F[B]
 }
 
-trait Monad[M[_]] extends Applicative[M] {
-  def unit[A](a: => A): M[A]
-
-  def flatMap[A, B](ma: M[A])(f: A => M[B]): M[B]
-
-  override def apply[A, B](mf: M[A => B])(ma: M[A]): M[B] =
-    flatMap(mf)(f => map[A, B](ma)(a => f(a)))
-
-  def compose[A, B, C](f: A => M[B], g: B => M[C]): A => M[C] =
-    a => flatMap(f(a))(g)
-
-  def flatMapC[A, B](ma: M[A])(f: A => M[B]): M[B] = compose((_: Unit) => ma, f)()
-
-  def join[A](mma: M[M[A]]): M[A] = flatMap(mma)(identity)
-
-  def flatMapJ[A, B](ma: M[A])(f: A => M[B]): M[B] = join(map(ma)(f))
-
-  def composeJ[A, B, C](f: A => M[B], g: B => M[C]): A => M[C] =
-    a => join(map(f(a))(g))
-
-}
-
 trait Applicative[F[_]] extends Functor[F] {
   def map2[A, B, C](fa: F[A], fb: F[B])(f: (A, B) => C): F[C] =
     apply(apply(unit(f.curried))(fa))(fb)
@@ -48,7 +26,7 @@ trait Applicative[F[_]] extends Functor[F] {
 
   def unit[A](a: => A): F[A]
 
-  def map[A,B](a: F[A])(f: A => B): F[B] = apply(unit(f))(a)
+  override def map[A,B](a: F[A])(f: A => B): F[B] = apply(unit(f))(a)
 
   def mapM[A,B](a: F[A])(f: A => B): F[B] = map2(unit(f), a)(_(_))
 
@@ -76,6 +54,30 @@ trait Applicative[F[_]] extends Functor[F] {
   }
 }
 
+trait Monad[M[_]] extends Applicative[M] {
+  def unit[A](a: => A): M[A]
+
+  def flatMap[A, B](ma: M[A])(f: A => M[B]): M[B]
+
+
+  override def map[A, B](ma: M[A])(f: A => B): M[B] = flatMap(ma)(a => unit(f(a)))
+
+  override def apply[A, B](mf: M[A => B])(ma: M[A]): M[B] =
+    flatMap(mf)(f => map[A, B](ma)(a => f(a)))
+
+  def compose[A, B, C](f: A => M[B], g: B => M[C]): A => M[C] =
+    a => flatMap(f(a))(g)
+
+  def flatMapC[A, B](ma: M[A])(f: A => M[B]): M[B] = compose((_: Unit) => ma, f)()
+
+  def join[A](mma: M[M[A]]): M[A] = flatMap(mma)(identity)
+
+  def flatMapJ[A, B](ma: M[A])(f: A => M[B]): M[B] = join(map(ma)(f))
+
+  def composeJ[A, B, C](f: A => M[B], g: B => M[C]): A => M[C] =
+    a => join(map(f(a))(g))
+
+}
 
 case class Id[A](value: A) {
   def map[B](f: A => B): Id[B] = Id(f(value))
@@ -129,7 +131,7 @@ object Monad {
     override def flatMap[A, B](ma: Id[A])(f: A => Id[B]): Id[B] = ma.flatMap(f)
   }
 
-  def stateMonad[S]: Monad[State[S, _]] =
+  def stateMonad[S]: Monad[({type lambda[x] = State[S, x]})#lambda] =
     new Monad[({type lambda[x] = State[S, x]})#lambda] {
       def unit[A](a: => A): State[S, A] = State(s => (a, s))
 
@@ -137,7 +139,7 @@ object Monad {
         st flatMap f
     }
 
-  def eitherMonad[E]: Monad[Either[E, _]] =
+  def eitherMonad[E]: Monad[({type f[x] = Either[E, x]})#f] =
     new Monad[({type f[x] = Either[E, x]})#f] {
       def unit[A](a: => A): Either[E, A] = Right(a)
 
@@ -147,8 +149,8 @@ object Monad {
 }
 
 object Applicative {
-  def validationApplicative[E]: Applicative[Validation[E, _]] =
-    new Applicative[({type lambda[x] = Validation[E, x]})#lambda] {
+  def validationApplicative[E]: Applicative[({type v[x] = Validation[E, x]})#v] =
+    new Applicative[({type v[x] = Validation[E, x]})#v] {
       def apply[A, B](fab: Validation[E, A => B])(fa: Validation[E, A]): Validation[E, B] =
         (fab, fa) match {
           case (Success(ab),   Success(a)     ) => Success(ab(a))
@@ -180,7 +182,7 @@ object WebForm {
     try {
       Success(new SimpleDateFormat("yyyy-MM-dd").parse(birthDate))
     } catch {
-      case _: Throwable => Failure("Birthdate must be in the form yyyy-MM-dd")
+      case _: Throwable => Failure("birthDate must be in the form yyyy-MM-dd")
     }
 
   def validPhone(phoneNumber: String): Validation[String, String] =
@@ -189,11 +191,13 @@ object WebForm {
     else Failure("Phone number must be 10 digits")
 
   def validWebForm(name: String,
-                   birthdate: String,
-                   phone: String): Validation[String, WebForm] =
-//    apply(apply(apply((WebForm(_, _, _)).curried)(
-//      validName(name)))(
-//      validBirthdate(birthdate)))(
-//      validPhone(phone))
-    ???
+                   birthDate: String,
+                   phone: String): Validation[String, WebForm] = {
+    val a: Applicative[({type v[x] = Validation[String, x]})#v] = Applicative.validationApplicative[String]
+    a.apply(a.apply(a.apply(a.unit((WebForm(_, _, _)).curried))(
+      validName(name)))(
+      validBirthDate(birthDate)))(
+      validPhone(phone))
+  }
+
 }
