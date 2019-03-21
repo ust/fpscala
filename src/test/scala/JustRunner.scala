@@ -1,43 +1,99 @@
-import lazyness.Stream
-import monoids.{Monoid, Stub, WC}
-import propertytesting.Gen.**
+import monads._
+import propertytesting.Gen._
 import propertytesting.Prop.Result
 import propertytesting.{Gen, Prop, SGen}
 import state.RNG
 
+import scala.language.higherKinds
+
 object JustRunner {
+
   def main(args: Array[String]): Unit = {
 
+
     val r0 = RNG.simple(0)
-    def run[A](seed: Int)(g: Gen[A]): A =
-      g.sample.run(RNG.simple(seed))._1
-//    def run0[A](g: Gen[A]) = run[A](0)(g)
-//    def run1[A](g: Gen[A]) = run[A](299)(g)
-//    def run2[A](g: Gen[A]) = run[A](98976432)(g)
-    def exh[A](g: Gen[A]): List[A] = g.exhaustive.flatMap(
-      _.map(Stream(_)).getOrElse(Stream.empty)).toList
-    def run0(p: Prop): Result = p.run(100, 5, r0)
-    def run1(p: Prop): Result = p.run(5, 20, r0)
-    def run2(p: Prop): Result = p.run(100, 100, r0)
-    def run3(p: Prop): Result = p.run(11, 500, r0)
-    def run_0(p: Prop): Result = p.run(9, 300, r0)
-    def monoidLaws[A](m: Monoid[A])(g: SGen[A]): Prop =
-      Prop.forAll(g ** g ** g) { case a ** b ** c =>
-        val left = m.op(a, m.op(b, c))
-        val right = m.op(m.op(a, b), c)
-        left == right
+
+    def run0(p: Prop): Result = p.run(10, 500, r0)
+
+    val genOptInt: Gen[Option[Int]] = (Gen.int ** Gen.boolean)
+      .map { case i ** b => if (b) Some(i) else None }
+    val genFnIntInt: Gen[Int => Option[Int]] =
+      Gen.int.map { i => if (i % 2 == 1) Some(_) else _ => None }
+    val genFnIntStr: Gen[Int => Option[String]] =
+      Gen.boolean.map {
+        case true => i => Some(i.toString)
+        case _ => _ => None
+      }
+    val genFnStrInt: Gen[String => Option[Int]] =
+      Gen.boolean.map {
+        case true => s => Some(s.length)
+        case _ => _ => None
+      }
+    type ValidationString[+A] = Validation[String, A]
+    val valStrApplicative: Applicative[ValidationString] = Applicative.validationApplicative[String]
+    val genApplicative: Gen[Validation[String, String]] = (Gen.boolean ** Gen.character).map {
+      case (true, b) => Success("" + b + b)
+      case (_, b) => Failure("" + b + b)
+    }
+
+    def lawAssociativeFlatMap[A, M[_]](gen: SGen[((M[A], A => M[A]), A => M[A])])
+                                      (m: Monad[M]) =
+      Prop.forAll(gen) {
+        case ((x, f), g) =>
+          m.flatMap(m.flatMap(x)(f))(g) == m.flatMap(x)(a => m.flatMap(f(a))(g))
       }
 
-    val wcMonoid = Monoid.wcMonoid
-    run_0(monoidLaws[WC](wcMonoid)(Gen.string.map(Stub)))
+    def lawAssociativeCompose[A, B, C, D, M[_]](gen: SGen[(((A => M[B], B => M[C]), C => M[D]), A)])
+                                               (m: Monad[M]) =
+      Prop.forAll(gen) {
+        case (((f, g), h), i) =>
+          m.compose(m.compose(f, g), h)(i) == m.compose(f, m.compose(g, h))(i)
+      }
 
-    val a = Stub("Cx")
-    val b = Stub(" 9")
-    val c = Stub("L ")
-    val l = wcMonoid.op(a, wcMonoid.op(b, c))
-    val r = wcMonoid.op(wcMonoid.op(a, b), c)
-    l == r
-    Monoid.splitCount("one  two three ")
+    def lawIdentityCompose[A, B, C, D, M[_]](gen: SGen[(A => M[B], A)])
+                                            (m: Monad[M]) =
+      Prop.forAll(gen) { case (f, a) =>
+        val func1: A => M[B] = m.compose(m.unit[A](_), f)
+        val func2: A => M[B] = m.compose(f, (x: B) => m.unit[B](x))
+        func1(a) == f(a) && func1(a) == func2(a)
+      }
+
+    def lawIdentityFlatMap[A, B, C, D, M[_]](gen: SGen[(A => M[B], A)])
+                                            (m: Monad[M]) =
+      Prop.forAll(gen) { case (f, a) =>
+        val func1: A => M[B] = x => m.flatMap(f(x))(m.unit[B](_))
+        val func2: A => M[B] = x => m.flatMap(m.unit(x))(f)
+        func1(a) == func2(a) && func1(a) == f(a)
+      }
+
+    def lawIdentityJoin[A, B, C, D, M[_]](gen: SGen[(A => M[B], A)])
+                                         (m: Monad[M]) =
+      Prop.forAll(gen) { case (f, a) =>
+        val func1: A => M[B] = x => m.join(m.map(f(x))(m.unit[B](_)))
+        val func2: A => M[B] = x => m.join(m.map(m.unit[A](x))(f))
+        func1(a) == func2(a) && func1(a) == f(a)
+      }
+
+    def lawAssociativeJoin[A, B, C, D, M[_]](gen: SGen[(((A => M[B], B => M[C]), C => M[D]), A)])
+                                            (m: Monad[M]) =
+      Prop.forAll(gen) {
+        case (((f, g), h), i) =>
+          val func1: A => M[D] = x => m.join(m.map(m.join(m.map(f(x))(g)))(h))
+          val func2: A => M[D] = x => m.join(m.map(f(x))(y => m.join(m.map(g(y))(h))))
+          func1(i) == func2(i)
+      }
+
+    def lawIdentityMap[A, F[_]](gen: SGen[F[A]])(f: Applicative[F]) =
+      Prop.forAll(gen)(functor => f.map(functor)(x => x) == functor)
+
+
+    run0(lawAssociativeFlatMap((genOptInt ** genFnIntInt ** genFnIntInt).unsized)(Monad.optionMonad))
+    run0(lawAssociativeCompose((genFnIntStr ** genFnStrInt ** genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
+    run0(lawIdentityCompose((genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
+    run0(lawIdentityFlatMap((genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
+    run0(lawIdentityJoin((genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
+    run0(lawAssociativeJoin((genFnIntStr ** genFnStrInt ** genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
+    run0(lawIdentityMap[String, ValidationString](genApplicative.unsized)(valStrApplicative))
+
   }
-
 }
