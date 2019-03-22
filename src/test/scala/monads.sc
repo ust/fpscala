@@ -11,26 +11,28 @@ def run0(p: Prop): Result = p.run(10, 500, r0)
 
 val genOptInt: Gen[Option[Int]] = (Gen.int ** Gen.boolean)
   .map { case i ** b => if (b) Some(i) else None }
-val genFnIntInt: Gen[Int => Option[Int]] =
+val genFnStr2Int: Gen[String => Int] = Gen.int.map(i => _.hashCode * i)
+val genFnInt2Str: Gen[Int => String] = Gen.character.map(c => c + _.toString)
+val genFnInt2OptInt: Gen[Int => Option[Int]] =
   Gen.int.map { i => if (i % 2 == 1) Some(_) else _ => None }
-val genFnIntStr: Gen[Int => Option[String]] =
+val genFnInt2OptStr: Gen[Int => Option[String]] =
   Gen.boolean.map {
     case true => i => Some(i.toString)
     case _    => _ => None
   }
-val genFnStrInt: Gen[String => Option[Int]] =
+val genFnStr2OptInt: Gen[String => Option[Int]] =
   Gen.boolean.map {
     case true => s => Some(s.length)
     case _    => _ => None
   }
-val genFnFnMonad = for {
-  a <- genFnIntStr
-  b <- genFnStrInt
+val genFnMonad = for {
+  a <- genFnInt2Str
+  b <- genFnStr2Int
   c <- Gen.int
   h <- genOptInt
   g <- genOptInt
   x <- genOptInt
-} yield (a, b, c, h.map(_ => a), g.map(_ => b), x.map(_ => x))
+} yield (h.map(_ => a), g.map(_ => b), x)
 
 type ValidationString[+A] = Validation[String, A]
 val genStrStrAppl: Gen[Validation[String, String]] = (Gen.boolean ** Gen.character).map {
@@ -84,22 +86,45 @@ def lawIdentityMap[A, F[_]](gen: SGen[F[A]])(f: Applicative[F]) =
   Prop.forAll(gen)(functor => f.map(functor)(x => x) == functor)
 def lawIdentityApply[A, F[_]](gen: SGen[F[A]])(f: Applicative[F]) =
   Prop.forAll(gen)(functor => f.apply(f.unit[A => A](identity))(functor) == functor)
-
-def lawCompositionApply[A, B, C, F[_]](gen: SGen[(A => B, B => C, A, F[A => B], F[B => C], F[A])])
+def lawCompositionApply[A, B, C, F[_]](gen: SGen[(F[A => B], F[B => C], F[A])])
                                       (f: Applicative[F]) = Prop.forAll(gen) {
-  case (a, b, c, g, h, x) =>
-    //f.apply(f.apply[A => B, A => C](f.unit(ab => bc => c0 => bc(ab(c0))))(g))(x) ==
-      //f.apply(h)(f.apply(g)(x))
-  true
+  case (g, h, x) =>
+    f.apply[A, C](
+      f.apply[A => B, A => C](
+        f.apply[B => C, (A => B) => A => C](
+          f.unit(bc => ab => a0 => bc(ab(a0)))
+        )(h)
+      )(g)
+    )(x) ==
+      f.apply(h)(f.apply(g)(x))
+
+}
+def lawCompositionMap2[A, B, C, F[_]](gen: SGen[(F[A => B], F[B => C], F[A])])
+                                     (f: Applicative[F]) = Prop.forAll(gen) {
+  case (g, h, x) => f.apply(f.map2(h, g)(_ compose _))(x) == f.apply(h)(f.apply(g)(x))
+}
+def lawCompositionMap3[A, B, C, F[_]](gen: SGen[(F[A => B], F[B => C], F[A])])
+                                     (f: Applicative[F]) = Prop.forAll(gen) {
+  case (g, h, x) => f.map3(h, g, x)((a, b, c) => a(b(c))) == f.apply(h)(f.apply(g)(x))
+}
+def lawHomomorphismUnit[A, B, C, F[_]](gen: SGen[(A => B, A)])
+                                     (f: Applicative[F]) = Prop.forAll(gen) {
+  case (g, a) =>
+    val v0 = f.unit(g(a))
+    f.apply(f.unit(g))(f.unit(a)) == v0 && f.map(f.unit(a))(g) == v0
 }
 
 
-run0(lawAssociativeFlatMap((genOptInt ** genFnIntInt ** genFnIntInt).unsized)(Monad.optionMonad))
-run0(lawAssociativeCompose((genFnIntStr ** genFnStrInt ** genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
-run0(lawIdentityCompose((genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
-run0(lawIdentityFlatMap((genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
-run0(lawIdentityJoin((genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
-run0(lawAssociativeJoin((genFnIntStr ** genFnStrInt ** genFnIntStr ** Gen.int).unsized)(Monad.optionMonad))
+run0(lawAssociativeFlatMap((genOptInt ** genFnInt2OptInt ** genFnInt2OptInt).unsized)(Monad.optionMonad))
+run0(lawAssociativeCompose((genFnInt2OptStr ** genFnStr2OptInt ** genFnInt2OptStr ** Gen.int).unsized)(Monad.optionMonad))
+run0(lawIdentityCompose((genFnInt2OptStr ** Gen.int).unsized)(Monad.optionMonad))
+run0(lawIdentityFlatMap((genFnInt2OptStr ** Gen.int).unsized)(Monad.optionMonad))
+run0(lawIdentityJoin((genFnInt2OptStr ** Gen.int).unsized)(Monad.optionMonad))
+run0(lawAssociativeJoin((genFnInt2OptStr ** genFnStr2OptInt ** genFnInt2OptStr ** Gen.int).unsized)(Monad.optionMonad))
 run0(lawIdentityMap[String, ValidationString](genStrStrAppl.unsized)(valStrApplicative))
 run0(lawIdentityApply[String, ValidationString](genStrStrAppl.unsized)(valStrApplicative))
+run0(lawCompositionApply(genFnMonad.unsized)(Monad.optionMonad))
+run0(lawCompositionMap2(genFnMonad.unsized)(Monad.optionMonad))
+run0(lawCompositionMap3(genFnMonad.unsized)(Monad.optionMonad))
+run0(lawHomomorphismUnit((genFnInt2Str ** Gen.int).unsized)(Monad.optionMonad))
 
