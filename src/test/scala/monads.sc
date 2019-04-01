@@ -25,7 +25,8 @@ val genFnStr2OptInt: Gen[String => Option[Int]] =
     case true => s => Some(s.length)
     case _    => _ => None
   }
-val genFnMonad = for {
+val genOptFnInt2Str: Gen[Option[Int => String]] = genOptInt.map2(genFnInt2Str)((o, f) => o.map(_ => f))
+val genAbBcAMonad = for {
   a <- genFnInt2Str
   b <- genFnStr2Int
   c <- Gen.int
@@ -107,11 +108,16 @@ def lawCompositionMap3[A, B, C, F[_]](gen: SGen[(F[A => B], F[B => C], F[A])])
                                      (f: Applicative[F]) = Prop.forAll(gen) {
   case (g, h, x) => f.map3(h, g, x)((a, b, c) => a(b(c))) == f.apply(h)(f.apply(g)(x))
 }
-def lawHomomorphismUnit[A, B, C, F[_]](gen: SGen[(A => B, A)])
+def lawHomomorphismUnit[A, B, F[_]](gen: SGen[(A => B, A)])
                                      (f: Applicative[F]) = Prop.forAll(gen) {
   case (g, a) =>
     val v0 = f.unit(g(a))
     f.apply(f.unit(g))(f.unit(a)) == v0 && f.map(f.unit(a))(g) == v0
+}
+def lawInterchangeUnit[A, B, F[_]](gen: SGen[(F[A => B], A)])
+                                     (f: Applicative[F]) = Prop.forAll(gen) {
+  case (g, a) =>
+    f.apply(g)(f.unit(a)) == f.apply[A => B, B](f.unit(_(a)))(g)
 }
 
 
@@ -123,8 +129,9 @@ run0(lawIdentityJoin((genFnInt2OptStr ** Gen.int).unsized)(Monad.optionMonad))
 run0(lawAssociativeJoin((genFnInt2OptStr ** genFnStr2OptInt ** genFnInt2OptStr ** Gen.int).unsized)(Monad.optionMonad))
 run0(lawIdentityMap[String, ValidationString](genStrStrAppl.unsized)(valStrApplicative))
 run0(lawIdentityApply[String, ValidationString](genStrStrAppl.unsized)(valStrApplicative))
-run0(lawCompositionApply(genFnMonad.unsized)(Monad.optionMonad))
-run0(lawCompositionMap2(genFnMonad.unsized)(Monad.optionMonad))
-run0(lawCompositionMap3(genFnMonad.unsized)(Monad.optionMonad))
+run0(lawCompositionApply(genAbBcAMonad.unsized)(Monad.optionMonad))
+run0(lawCompositionMap2(genAbBcAMonad.unsized)(Monad.optionMonad))
+run0(lawCompositionMap3(genAbBcAMonad.unsized)(Monad.optionMonad))
 run0(lawHomomorphismUnit((genFnInt2Str ** Gen.int).unsized)(Monad.optionMonad))
+run0(lawInterchangeUnit((genOptFnInt2Str ** Gen.int).unsized)(Monad.optionMonad))
 
