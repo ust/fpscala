@@ -87,11 +87,7 @@ case class Id[A](value: A) {
 
   def flatMap[B](f: A => Id[B]): Id[B] = f(value)
 }
-// what is difference between Monad and ordinary trait?
-// how it helps?
-// why type parameter?
-// why type lambda? how write explicitly?
-// what is to lift?
+
 object Monad {
   val genMonad: Monad[Gen] = new Monad[Gen] {
     def unit[A](a: => A): Gen[A] = Gen.unit(a)
@@ -173,7 +169,7 @@ case class Failure[E](head: E, tail: Vector[E] = Vector.empty) extends Validatio
 
 case class Success[A](a: A) extends Validation[Nothing, A]
 
-case class WebForm(name: String, birthDate: Date, phoneNumber: String)
+case class WebForm(name: String, birthDate0: Date, phoneNumber: String)
 
 object WebForm {
   def validName(name: String): Validation[String, String] =
@@ -181,9 +177,9 @@ object WebForm {
       Success(name)
     else Failure("Name cannot be empty")
 
-  def validBirthDate(birthDate: String): Validation[String, Date] =
+  def validBirthDate(birthDate1: String): Validation[String, Date] =
     try {
-      Success(new SimpleDateFormat("yyyy-MM-dd").parse(birthDate))
+      Success(new SimpleDateFormat("yyyy-MM-dd").parse(birthDate1))
     } catch {
       case _: Throwable => Failure("birthDate must be in the form yyyy-MM-dd")
     }
