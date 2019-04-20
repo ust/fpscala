@@ -1,10 +1,5 @@
 package wixtest
 
-// - presentation (play mode, shortest solved)
-// - tests, property-tests
-// - expressive, library, laws like cannot move
-// - extends ? (4 - n, dimensions?)
-
 sealed trait Cell[+A]
 case class Tile[+A](value: A) extends Cell[A]
 case object Void extends Cell[Nothing]
@@ -15,7 +10,7 @@ case object Down extends Move
 case object Right extends Move
 case object Left extends Move
 
-case class Frame[+A: Comparable[A]](size: Int) {
+case class Frame[+A: Comparable[A]](cells: Vector[Cell[A]], size: Int) {
   def move(move: Move): Frame[A] = ???
   def moves: Stream[Frame[A]] = ???
   def flatMap[B](f: A => Frame[B]): Frame[B] = ???
@@ -23,13 +18,15 @@ case class Frame[+A: Comparable[A]](size: Int) {
 }
 
 object Frame {
-//  def Frame[A]: Frame[A] = ???
-
-  def shit: Frame[Boolean] = {
-    for {
-      t <- Frame[Int](8)
-    } yield t > 0
+  def cons[A: Comparable[A]](values: Vector[A], size: Int, empty: Int): Frame[A] = {
+    // todo require( sqrt ???)
+    val cells = values.map(v => Tile(v)).splitAt(empty) match {
+      case (l, r) => (l :+ Void) ++ r
+    }
+    Frame(cells, size)
   }
+
+  def isSolved[A: Comparable](frame: Frame[A]): Boolean = ???
 }
 
 object Solver {
