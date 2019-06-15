@@ -10,7 +10,7 @@ case object Down extends Move
 case object Right extends Move
 case object Left extends Move
 
-case class Frame[+A: Comparable[A]](cells: Vector[Cell[A]], size: Int) {
+case class Frame[+A: Comparable](cells: Vector[Cell[A]], size: Int) {
   def move(move: Move): Frame[A] = ???
   def moves: Stream[Frame[A]] = ???
   def flatMap[B](f: A => Frame[B]): Frame[B] = ???
@@ -18,7 +18,7 @@ case class Frame[+A: Comparable[A]](cells: Vector[Cell[A]], size: Int) {
 }
 
 object Frame {
-  def cons[A: Comparable[A]](values: Vector[A], size: Int, empty: Int): Frame[A] = {
+  def cons[A: Comparable](values: Vector[A], size: Int, empty: Int): Frame[A] = {
     // todo require( sqrt ???)
     val cells = values.map(v => Tile(v)).splitAt(empty) match {
       case (l, r) => (l :+ Void) ++ r
