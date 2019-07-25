@@ -1,8 +1,6 @@
 package hackerrank
 
-import java.io._
-
-object Solution {
+object SockMerchant {
 
   // Complete the sockMerchant function below.
   def sockMerchant(n: Int, ar: Array[Int]): Int = {
@@ -14,18 +12,5 @@ object Solution {
     }._2
   }
 
-  def main(args: Array[String]) {
-    val stdin = scala.io.StdIn
-
-    val printWriter = new PrintWriter(sys.env("OUTPUT_PATH"))
-
-    val n = stdin.readLine.trim.toInt
-
-    val ar = stdin.readLine.split(" ").map(_.trim.toInt)
-    val result = sockMerchant(n, ar)
-
-    printWriter.println(result)
-
-    printWriter.close()
-  }
+  def main(args: Array[String]) {}
 }
