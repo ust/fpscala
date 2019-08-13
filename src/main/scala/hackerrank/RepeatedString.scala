@@ -7,7 +7,7 @@ object RepeatedString {
     val iterations = n / s.length
     val rest = n % s.length
     (for {
-      i <- 0 to (s.length - 1)
+      i <- 0 until s.length
       if s(i) == 'a'
     } yield if (i < rest) iterations + 1 else iterations).sum
   }
