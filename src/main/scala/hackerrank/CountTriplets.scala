@@ -29,15 +29,18 @@ object CountTriplets {
     // count (k->v) k = size of min set (i in j) v = i less then some j. Count j->k version
     // iterate ijs and jks and calc
     val triplets = for {
-      n <- indices.keys
-      is = indices.getOrElse(n, SortedSet.empty[Int])
-      js = indices.getOrElse(n * r, SortedSet.empty[Int])
-      ks = indices.getOrElse(n * r * r, SortedSet.empty[Int])
-      ij = is.map(js.keysIteratorFrom(_).size).groupBy(identity).mapValues(_.size)
-      jk = js.map(ks.keysIteratorFrom(_).size).groupBy(identity).mapValues(_.size)
+      n      <- indices.keys
+      is      = indices.getOrElse(n, SortedSet.empty[Int])
+      js      = indices.getOrElse(n * r, SortedSet.empty[Int])
+      ks      = indices.getOrElse(n * r * r, SortedSet.empty[Int])
+      ij      = is.toList.map(js.from(_).size).groupBy(identity).mapValues(_.size)
+      jk      = js.toList.map(ks.from(_).size).groupBy(identity).mapValues(_.size)
       (a, b) <- ij
       (c, d) <- jk
-    } yield b * a * ???
+    } yield {
+      println(s"n:$n, is: $is js: $js ks: $ks ij: $ij jk: $jk --> $b->${a.max(d)}->$c")
+      b * (a min d) * c
+    }
 
     triplets.sum
   }
