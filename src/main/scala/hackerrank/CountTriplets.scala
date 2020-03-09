@@ -11,7 +11,16 @@ object CountTriplets {
     // map elements on duplicates count
     val indices = arr.zipWithIndex.groupBy(_._1).mapValues(_.map(_._2).to[SortedSet])
     // create progressive triplets from keys
-    val triplets = for {
+    val triplets =
+      if (r == 1) for {
+      n <- indices.keys
+      a  = indices.getOrElse(n, Seq.empty).size
+      i <- 1 to a
+      j <- i + 1 to a
+      k <- j + 1 to a
+    } yield (i, j, k)
+    else
+      for {
       n <- indices.keys
       i <- indices.getOrElse(n, Seq.empty)
       j <- indices.getOrElse(n * r, SortedSet.empty[Int]).keysIteratorFrom(i + 1)
@@ -33,28 +42,30 @@ object CountTriplets {
       is      = indices.getOrElse(n, SortedSet.empty[Int])
       js      = indices.getOrElse(n * r, SortedSet.empty[Int])
       ks      = indices.getOrElse(n * r * r, SortedSet.empty[Int])
-      ij      = is.toList.map(js.from(_).size).groupBy(identity).mapValues(_.size)
-      jk      = js.toList.map(ks.from(_).size).groupBy(identity).mapValues(_.size)
+      ij      = is.toList.map(js.keysIteratorFrom(_).size).groupBy(identity).mapValues(_.size)
+      jk      = js.toList.map(ks.keysIteratorFrom(_).size).groupBy(identity).mapValues(_.size)
       (a, b) <- ij
       (c, d) <- jk
     } yield {
-      println(s"n:$n, is: $is js: $js ks: $ks ij: $ij jk: $jk --> $b->${a.max(d)}->$c")
+      println(s"n:$n, is: $is js: $js ks: $ks $a->$b $c->$d   $b->${a.max(d)}->$c")
       b * (a min d) * c
     }
 
     triplets.sum
   }
 
-  //                               [(gtNum:lsSet)-> counter]
+  //                               [(gtNum:lsSet)-> counter] f(s, up, lo) = up + lo - s
   // (1,2) (3,4,5) (6,7,8) = 18 => (3->2) (3->3)            = 2->3->3
   // (1,3) (2,4,5) (6,7,8) = 15 => (3->1;2->1) (3->3)       = 1->3->3; 1->2->3
-  // (1,3) (2,4,6) (5,7,8) = 13 => (3->1;2->1) (3->2,2->1)  = 1->2->3; 1->1->2; 1->2->2; 1->(2-1)->2
+  // (1,3) (2,4,6) (5,7,8) = 13 => (3->1;2->1) (3->2,2->1)  = 1-2/4-5/7/8  1-6-7/8  3-4-5/7/8  3-6-7/8
   // (2,3) (1,4,5) (6,7,8) = 12 => (2->2) (3->2)            = 2->2->3
   // (2,3) (1,4,6) (5,7,8) = 10 => (2->2) (3->1;2->1)       = 2->1->3; 2->1->2
 
   def main(args: Array[String]): Unit = {
-    println(countTriplets(Array(1, 1, 1, 1, 1, 1), 1) + " 20")
-    println(countTriplets(Array(1, 1, 1, 9, 9, 9), 1) + " 2")
+    println(countTriplets2(Array(1, 1, 1), 1) + " 1")
+    println(countTriplets2(Array(1, 1, 1, 1, 1, 1), 1) + " 20")
+    println(countTriplets2(Array(1, 1, 1, 9, 9, 9), 1) + " 2")
+    println(countTriplets2(Array(1, 1, 1, 2, 2, 2, 9, 9, 9), 1) + " 3")
     println(countTriplets(Array(1, 3, 9, 9, 27, 81), 3) + " 6")
     println(countTriplets(Array(1, 9, 3, 9, 27, 81), 3) + " 4")
     println(countTriplets(Array(1, 1, 3, 3, 3, 9, 9, 9), 3) + " 18")
