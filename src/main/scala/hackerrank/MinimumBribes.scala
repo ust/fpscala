@@ -2,6 +2,7 @@ package hackerrank
 
 import scala.annotation.tailrec
 import scala.collection.immutable.SortedSet
+import scala.language.postfixOps
 
 object MinimumBribes {
 

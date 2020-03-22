@@ -1,6 +1,7 @@
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.higherKinds
+import scala.language.postfixOps
 
 object JustRunner {
   case class Thing(name: String)

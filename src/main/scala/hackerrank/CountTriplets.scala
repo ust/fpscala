@@ -9,7 +9,7 @@ object CountTriplets {
   // where a[i]^2 == a[j] and a[j]^2 == a[k]
   def countTriplets2(arr: Array[Long], r: Long): Long = {
     // map elements on duplicates count
-    val indices = arr.zipWithIndex.groupBy(_._1).mapValues(_.map(_._2).to[SortedSet])
+    val indices = arr.zipWithIndex.groupMap(_._1)(_._2).map { case (k, a) => (k, a.to(SortedSet)) }
     // create progressive triplets from keys
     val triplets =
       if (r == 1) for {
@@ -23,8 +23,8 @@ object CountTriplets {
       for {
       n <- indices.keys
       i <- indices.getOrElse(n, Seq.empty)
-      j <- indices.getOrElse(n * r, SortedSet.empty[Int]).keysIteratorFrom(i + 1)
-      k <- indices.getOrElse(n * r * r, SortedSet.empty[Int]).keysIteratorFrom(j + 1)
+      j <- indices.getOrElse(n * r, SortedSet.empty[Int]).iteratorFrom(i + 1)
+      k <- indices.getOrElse(n * r * r, SortedSet.empty[Int]).iteratorFrom(j + 1)
     } yield (i, j, k)
 
     triplets.size
@@ -33,7 +33,9 @@ object CountTriplets {
   // Complete the countTriplets function below.
   def countTriplets(arr: Array[Long], r: Long): Long = {
     // map elements on duplicates count
-    val indices = arr.zipWithIndex.groupBy(_._1).mapValues(_.map(_._2).to[SortedSet])
+    val indices: Map[Long, SortedSet[Int]] =
+      arr.zipWithIndex.groupBy(_._1).view.mapValues(_.map(_._2).to(SortedSet)).to(Map)
+    //arr.zipWithIndex.groupMap(_._1)(_._2)
     // iterate through all keys and extract their progressive versions and
     // count (k->v) k = size of min set (i in j) v = i less then some j. Count j->k version
     // iterate ijs and jks and calc
@@ -42,8 +44,8 @@ object CountTriplets {
       is      = indices.getOrElse(n, SortedSet.empty[Int])
       js      = indices.getOrElse(n * r, SortedSet.empty[Int])
       ks      = indices.getOrElse(n * r * r, SortedSet.empty[Int])
-      ij      = is.toList.map(js.keysIteratorFrom(_).size).groupBy(identity).mapValues(_.size)
-      jk      = js.toList.map(ks.keysIteratorFrom(_).size).groupBy(identity).mapValues(_.size)
+      ij      = is.toList.map(js.iteratorFrom(_).size).groupBy(identity).mapValues(_.size)
+      jk      = js.toList.map(ks.iteratorFrom(_).size).groupBy(identity).mapValues(_.size)
       (a, b) <- ij
       (c, d) <- jk
     } yield {
@@ -62,10 +64,10 @@ object CountTriplets {
   // (2,3) (1,4,6) (5,7,8) = 10 => (2->2) (3->1;2->1)       = 2->1->3; 2->1->2
 
   def main(args: Array[String]): Unit = {
-    println(countTriplets2(Array(1, 1, 1), 1) + " 1")
-    println(countTriplets2(Array(1, 1, 1, 1, 1, 1), 1) + " 20")
-    println(countTriplets2(Array(1, 1, 1, 9, 9, 9), 1) + " 2")
-    println(countTriplets2(Array(1, 1, 1, 2, 2, 2, 9, 9, 9), 1) + " 3")
+//    println(countTriplets2(Array(1, 1, 1), 1) + " 1")
+//    println(countTriplets2(Array(1, 1, 1, 1, 1, 1), 1) + " 20")
+//    println(countTriplets2(Array(1, 1, 1, 9, 9, 9), 1) + " 2")
+//    println(countTriplets2(Array(1, 1, 1, 2, 2, 2, 9, 9, 9), 1) + " 3")
     println(countTriplets(Array(1, 3, 9, 9, 27, 81), 3) + " 6")
     println(countTriplets(Array(1, 9, 3, 9, 27, 81), 3) + " 4")
     println(countTriplets(Array(1, 1, 3, 3, 3, 9, 9, 9), 3) + " 18")
