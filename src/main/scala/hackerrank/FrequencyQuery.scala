@@ -14,7 +14,7 @@ object FrequencyQuery extends App {
         val newCounters = counters.updatedWith(n)(_ => Some(counter + 1))
         val newFrequencies = frequencies.updatedWith(counter) {
           case Some(1) => None
-          case Some(c) => Some(c + 1)
+          case Some(f) => Some(f - 1)
         }.updatedWith(counter + 1) {
           case Some(f) => Some(f + 1)
           case _       => Some(1)
@@ -42,6 +42,9 @@ object FrequencyQuery extends App {
           val newFrequencies = frequencies.updatedWith(counter) {
             case Some(1) => None
             case Some(f) => Some(f - 1)
+          }.updatedWith(counter - 1) {
+            case None    => Some(1)
+            case Some(f) => Some(f + 1)
           }
           (counters.updatedWith(n)(_ => Some(counter - 1)), newFrequencies)
       } getOrElse {
@@ -73,4 +76,5 @@ object FrequencyQuery extends App {
   val q3 = Array((1, 3), (2, 3), (3, 2), (1, 4), (1, 5), (1, 5), (1, 4), (3, 2), (2, 4), (3, 2)).map(p => Array(p._1, p._2))
   val r3 = Array(0, 1, 1)
   printResult(freqQuery(q3), r3)
+
 }
