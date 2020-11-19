@@ -16,20 +16,19 @@ trait Functor[F[_]] {
 }
 
 trait Applicative[F[_]] extends Functor[F] {
+  def unit[A](a: => A): F[A]
+
+  def apply[A, B](fab: F[A => B])(fa: F[A]): F[B]
+
+  def applyM2[A, B](fab: F[A => B])(fa: F[A]): F[B] = map2(fab, fa)(_(_))
+
+  override def map[A,B](a: F[A])(f: A => B): F[B] = apply(unit(f))(a)
+
   def map2[A, B, C](fa: F[A], fb: F[B])(f: (A, B) => C): F[C] =
     apply(apply(unit(f.curried))(fa))(fb)
 
   def map3[A, B, C, D](fa: F[A], fb: F[B], fc: F[C])(f: (A, B, C) => D): F[D] =
     apply(apply(apply(unit(f.curried))(fa))(fb))(fc)
-
-  def apply[A, B](fab: F[A => B])(fa: F[A]): F[B]
-
-  def applyM[A, B](fab: F[A => B])(fa: F[A]): F[B] =
-    map2(fab, fa)((ab, a) => ab(a))
-
-  def unit[A](a: => A): F[A]
-
-  override def map[A,B](a: F[A])(f: A => B): F[B] = apply(unit(f))(a)
 
   def mapM[A,B](a: F[A])(f: A => B): F[B] = map2(unit(f), a)(_(_))
 
@@ -61,7 +60,6 @@ trait Monad[M[_]] extends Applicative[M] {
   def unit[A](a: => A): M[A]
 
   def flatMap[A, B](ma: M[A])(f: A => M[B]): M[B]
-
 
   override def map[A, B](ma: M[A])(f: A => B): M[B] = flatMap(ma)(a => unit(f(a)))
 
@@ -156,7 +154,6 @@ object Applicative {
           case (Failure(h, t), Failure(h0, t0)) => Failure[E](h0, (t0 :+ h) ++ t)
           case (f: Failure[E], _              ) => f
           case (_,             f: Failure[E]  ) => f
-          case _                                => throw new IllegalArgumentException
         }
 
       def unit[A](a: => A): Validation[E, A] = Success(a)
@@ -173,8 +170,7 @@ case class WebForm(name: String, birthDate0: Date, phoneNumber: String)
 
 object WebForm {
   def validName(name: String): Validation[String, String] =
-    if (name != "")
-      Success(name)
+    if (name != "") Success(name)
     else Failure("Name cannot be empty")
 
   def validBirthDate(birthDate1: String): Validation[String, Date] =
@@ -185,8 +181,7 @@ object WebForm {
     }
 
   def validPhone(phoneNumber: String): Validation[String, String] =
-    if (phoneNumber.matches("[0-9]{10}"))
-      Success(phoneNumber)
+    if (phoneNumber.matches("[0-9]{10}")) Success(phoneNumber)
     else Failure("Phone number must be 10 digits")
 
   def validWebForm(name: String,

@@ -85,7 +85,7 @@ object Gen {
   }
 
   object ** {
-    def unapply[A,B](p: (A,B)) = Some(p)
+    def unapply[A, B](p: (A, B)): Option[(A, B)] = Some(p)
   }
 
   def choose(start: Int, stopExclusive: Int): Gen[Int] = {
@@ -142,7 +142,7 @@ object Status {
 import propertytesting.Prop._
 
 case class Prop(run: (MaxSize, TestCases, RNG) => Result) {
-  def &&(p: Prop) = Prop {
+  def &&(p: Prop): Prop = Prop {
     (max, n, rng) =>
       run(max, n, rng) match {
         case Right((a, n)) => p.run(max, n, rng).right.map { case (s, m) => (s, n + m) }

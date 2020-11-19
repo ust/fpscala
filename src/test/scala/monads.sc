@@ -121,6 +121,8 @@ def lawInterchangeUnit[A, B, F[_]](gen: SGen[(F[A => B], A)])
 }
 
 
+
+
 run0(lawAssociativeFlatMap((genOptInt ** genFnInt2OptInt ** genFnInt2OptInt).unsized)(Monad.optionMonad))
 run0(lawAssociativeCompose((genFnInt2OptStr ** genFnStr2OptInt ** genFnInt2OptStr ** Gen.int).unsized)(Monad.optionMonad))
 run0(lawIdentityCompose((genFnInt2OptStr ** Gen.int).unsized)(Monad.optionMonad))

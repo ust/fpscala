@@ -1,4 +1,27 @@
+import scala.collection.immutable
+
 object Misc {
+
+  /*
+     * Complete the 'findNumber' function below.
+     *
+     * The function is expected to return a STRING.
+     * The function accepts following parameters:
+     *  1. INTEGER_ARRAY arr
+     *  2. INTEGER k
+     */
+
+  def findNumber(arr: Array[Int], k: Int): String = {
+    // Write your code here
+    if (arr.toSet.contains(k)) "YES" else "NO"
+  }
+
+  def oddNumbers(l: Int, r: Int): Array[Int] = {
+    (for {
+      i <- l to r
+      if i % 2 == 1
+    } yield i).toArray
+  }
 
   def compose[A, B, C](f: B => C, g: A => B): A => C =
     a => f(g(a))
@@ -55,4 +78,7 @@ object Misc {
 
     if (n <= 0) -999 else f(n)
   }
+
+  val const = "something"
+
 }

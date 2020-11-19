@@ -15,8 +15,7 @@ object Par {
     override def get(timeout: Long, unit: TimeUnit): A = get
   }
 
-  private case class StrictFuture[A](s: ExecutorService, a: Par[A])
-    extends Future[A] {
+  private case class StrictFuture[A](s: ExecutorService, a: Par[A]) extends Future[A] {
     val f: Future[Future[A]] = s.submit(() => a(s))
 
     override def cancel(mayInterruptIfRunning: Boolean): Boolean =

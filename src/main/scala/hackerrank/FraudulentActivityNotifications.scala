@@ -4,15 +4,15 @@ object FraudulentActivityNotifications extends App {
 
   // Complete the activityNotifications function below.
   def activityNotifications(expenditure: Array[Int], d: Int): Int = {
-    type Acc = (Seq[Int], Int, Int)
-    val acc: Acc = (Seq.empty[Int], 0, 0)
+    type Acc = (Vector[Int], Int, Int)
+    val acc: Acc = (Vector.empty[Int], 0, 0)
 
-    def search(seq: Seq[Int], a: Int): Int = {
+    def biSearch(vector: Vector[Int], a: Int): Int = {
       @annotation.tailrec
       def go(start: Int, end: Int): Int =  {
         val d = end - start
         val i = start + d / 2
-        (a compare seq(i), d) match {
+        (a compare vector(i), d) match {
           case ( 0, _) => i
           case (-1, 1) => start
           case ( 1, 1) => end
@@ -21,30 +21,26 @@ object FraudulentActivityNotifications extends App {
         }
       }
 
-      if (seq.isEmpty) 0 else go(0, seq.size)
+      if (vector.isEmpty) 0 else go(0, vector.size)
     }
 
-    def insert(seq: Seq[Int], a: Int): Seq[Int] = {
-      val i1 = search(seq, a)
-      //println(i1)
-      seq.patch(i1, Seq(a), 0)
-    }
+    def insert(vector: Vector[Int], a: Int): Vector[Int] = vector.patch(biSearch(vector, a), Seq(a), 0)
 
-    def drop(seq: Seq[Int], a: Int): Seq[Int] = seq.span(_ != a) match { case (l, r) => l ++ r.tail}
+    def drop(vector: Vector[Int], a: Int): Vector[Int] = vector.patch(biSearch(vector, a), Nil, 1)
 
-    def median2x(l: Seq[Int]): Int = if (l.size < d) -1 else (l.size % 2, l.size / 2) match {
-      case (0, n) => l.view.slice(n - 1, n + 1).sum
+    def median2x(l: Vector[Int]): Int = if (l.size < d) -1 else (l.size % 2, l.size / 2) match {
+      case (0, n) => l(n - 1) + l(n)
       case (1, n) => l(n) * 2
     }
 
-    expenditure.foldLeft(acc) { case ((sequence, i, counter), a) =>
-      val m = median2x(sequence)
+    expenditure.foldLeft(acc) { case ((vector, i, counter), a) =>
+      val m = median2x(vector)
       val first = i - d
-      val newSeq = if (sequence.size >= d) insert(drop(sequence, expenditure(first)), a) else insert(sequence, a)
+      val newVector = if (vector.size >= d) insert(drop(vector, expenditure(first)), a) else insert(vector, a)
 
-      println(s"$i, $newSeq, median: $m, first: $first, a: $a")
+      //println(s"$i, $newVector, median: $m, first: $first, a: $a")
 
-      (newSeq, i + 1, if (i >= d && m <= a) counter + 1 else counter)
+      (newVector, i + 1, if (i >= d && m <= a) counter + 1 else counter)
     }._3
   }
 
