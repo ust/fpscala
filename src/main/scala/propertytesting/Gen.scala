@@ -31,11 +31,11 @@ trait SGen[+A] {
   def map2[B, C](g: SGen[B])(f: (A, B) => C): SGen[C] = flatMap(a => g.map(f(a, _)))
 
   def **[B](s2: SGen[B]): SGen[(A, B)] = (this, s2) match {
-    case (Sized(g), Sized(g2)) => Sized(n => g(n) ** g2(n))
+    case (Sized(g), Sized(g2))     => Sized(n => g(n) ** g2(n))
     case (Unsized(g), Unsized(g2)) => Unsized(g ** g2)
-    case (Sized(g), Unsized(g2)) => Sized(n => g(n) ** g2)
-    case (Unsized(g), Sized(g2)) => Sized(n => g ** g2(n))
-    case (_, _) => throw new IllegalArgumentException("Failed to match complex Gen")
+    case (Sized(g), Unsized(g2))   => Sized(g(_) ** g2)
+    case (Unsized(g), Sized(g2))   => Sized(g ** g2(_))
+    case (_, _)                    => throw new IllegalArgumentException("Failed to match complex Gen")
   }
 }
 

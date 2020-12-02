@@ -16,13 +16,15 @@ trait Functor[F[_]] {
 }
 
 trait Applicative[F[_]] extends Functor[F] {
+  self =>
+
   def unit[A](a: => A): F[A]
 
   def apply[A, B](fab: F[A => B])(fa: F[A]): F[B]
 
-  def applyM2[A, B](fab: F[A => B])(fa: F[A]): F[B] = map2(fab, fa)(_(_))
+  def applyM2[A, B](fab: F[A => B])(fa: F[A]): F[B] = map2(fab, fa)(_ (_))
 
-  override def map[A,B](a: F[A])(f: A => B): F[B] = apply(unit(f))(a)
+  override def map[A, B](a: F[A])(f: A => B): F[B] = apply(unit(f))(a)
 
   def map2[A, B, C](fa: F[A], fb: F[B])(f: (A, B) => C): F[C] =
     apply(apply(unit(f.curried))(fa))(fb)
@@ -30,7 +32,7 @@ trait Applicative[F[_]] extends Functor[F] {
   def map3[A, B, C, D](fa: F[A], fb: F[B], fc: F[C])(f: (A, B, C) => D): F[D] =
     apply(apply(apply(unit(f.curried))(fa))(fb))(fc)
 
-  def mapM[A,B](a: F[A])(f: A => B): F[B] = map2(unit(f), a)(_(_))
+  def mapM[A, B](a: F[A])(f: A => B): F[B] = map2(unit(f), a)(_ (_))
 
   def sequence[A](fas: List[F[A]]): F[List[A]] =
     fas.foldLeft(unit(List.empty[A]))(map2(_, _) { case (l, a) => a :: l })
@@ -42,9 +44,10 @@ trait Applicative[F[_]] extends Functor[F] {
     @tailrec
     def rpl(acc: F[List[A]], fa: F[A], n: Int): F[List[A]] = n match {
       case x if x < 0 => throw new IllegalArgumentException("n shouldn't be negative")
-      case 0          => acc
-      case x          => rpl(map2(fa, acc)(_ :: _), fa, x - 1)
+      case 0 => acc
+      case x => rpl(map2(fa, acc)(_ :: _), fa, x - 1)
     }
+
     rpl(unit(Nil), fa, n)
   }
 
@@ -54,6 +57,22 @@ trait Applicative[F[_]] extends Functor[F] {
     case Left(a) => map(a)(Left(_))
     case Right(b) => map(b)(Right(_))
   }
+
+  def product[G[_]](G: Applicative[G]): Applicative[({type f[x] = (F[x], G[x])})#f] =
+    new Applicative[({type f[x] = (F[x], G[x])})#f] {
+      override def unit[A](a: => A): (F[A], G[A]) = (self.unit(a), G.unit(a))
+
+      override def apply[A, B](fab: (F[A => B], G[A => B]))(fa: (F[A], G[A])): (F[B], G[B]) =
+        (self.apply(fab._1)(fa._1), G.apply(fab._2)(fa._2))
+    }
+
+  def compose[G[_]](G: Applicative[G]): Applicative[({type f[x] = F[G[x]]})#f] =
+    new Applicative[({type f[x] = F[G[x]]})#f] {
+      override def unit[A](a: => A): F[G[A]] = self.unit(G.unit(a))
+
+      override def apply[A, B](fab: F[G[A => B]])(fa: F[G[A]]): F[G[B]] =
+        self.apply(self.map[G[A => B], G[A] => G[B]](fab)(gab => G.apply(gab)(_)))(fa)
+    }
 }
 
 trait Monad[M[_]] extends Applicative[M] {
@@ -145,8 +164,8 @@ object Monad {
     }
 }
 
-object Applicative {
-  def validationApplicative[E]: Applicative[({type v[x] = Validation[E, x]})#v] =
+object Validation {
+  def applicative[E]: Applicative[({type v[x] = Validation[E, x]})#v] =
     new Applicative[({type v[x] = Validation[E, x]})#v] {
       def apply[A, B](fab: Validation[E, A => B])(fa: Validation[E, A]): Validation[E, B] =
         (fab, fa) match {
@@ -187,7 +206,7 @@ object WebForm {
   def validWebForm(name: String,
                    birthDate: String,
                    phone: String): Validation[String, WebForm] = {
-    val a: Applicative[({type v[x] = Validation[String, x]})#v] = Applicative.validationApplicative[String]
+    val a: Applicative[({type v[x] = Validation[String, x]})#v] = Validation.applicative[String]
     a.apply(a.apply(a.apply(a.unit((WebForm(_, _, _)).curried))(
       validName(name)))(
       validBirthDate(birthDate)))(
