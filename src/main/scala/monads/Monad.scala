@@ -9,11 +9,41 @@ import propertytesting.Gen
 import state.State
 
 import scala.annotation.tailrec
-import scala.language.higherKinds
+
+object Functor {
+  type Idx[A] = A
+}
 
 trait Functor[F[_]] {
   def map[A, B](fa: F[A])(f: A => B): F[B]
 }
+
+
+trait Traverse[F[_]] extends Functor[F] {
+  def traverse[M[_] : Applicative, A, B](fa: F[A])(f: A => M[B]): M[F[B]] = sequence(map(fa)(f))
+
+  def sequence[M[_] : Applicative, A](fma: F[M[A]]): M[F[A]] = traverse(fma)(ma => ma)
+
+  def map[A, B](fa: F[A])(f: A => B): F[B] = traverse[Functor.Idx, A, B](fa)(f)(Monad.idxMonad)
+}
+
+object Traverse {
+  val listTraverse: Monad[List] = Monad.listMonad
+
+  val optionTraverse: Monad[Option] = Monad.optionMonad
+
+  val treeTraverse: Monad[Tree] = new Monad[Tree] {
+    override def unit[A](a: => A): Tree[A] = Tree(a, List.empty)
+
+    override def flatMap[A, B](ma: Tree[A])(f: A => Tree[B]): Tree[B] = ma match {
+      case Tree(a, mas) => f(a) match {
+        case Tree(b, mbs) => Tree(b, mas.map(flatMap(_)(f)) ++ mbs)
+      }
+    }
+  }
+}
+
+case class Tree[+A](head: A, tail: List[Tree[A]])
 
 trait Applicative[F[_]] extends Functor[F] {
   self =>
@@ -36,6 +66,10 @@ trait Applicative[F[_]] extends Functor[F] {
 
   def sequence[A](fas: List[F[A]]): F[List[A]] =
     fas.foldLeft(unit(List.empty[A]))(map2(_, _) { case (l, a) => a :: l })
+
+  def sequenceMap[K, V](ofa: Map[K, F[V]]): F[Map[K, V]] = ofa.foldLeft(unit(Map.empty[K, V])) {
+    case (fm, (k, fv)) => apply[V, Map[K, V]](map(fm)(mv => v => mv + (k -> v)))(fv)
+  }
 
   def traverse[A, B](as: List[A])(f: A => F[B]): F[List[B]] =
     sequence(as.map(f))
@@ -76,6 +110,8 @@ trait Applicative[F[_]] extends Functor[F] {
 }
 
 trait Monad[M[_]] extends Applicative[M] {
+  self =>
+
   def unit[A](a: => A): M[A]
 
   def flatMap[A, B](ma: M[A])(f: A => M[B]): M[B]
@@ -97,6 +133,14 @@ trait Monad[M[_]] extends Applicative[M] {
   def composeJ[A, B, C](f: A => M[B], g: B => M[C]): A => M[C] =
     a => join(map(f(a))(g))
 
+  def compose[N[_]](N: Monad[N]): Monad[({type f[x] = M[N[x]]})#f] =
+    new Monad[({type f[x] = M[N[x]]})#f] {
+      override def unit[A](a: => A): M[N[A]] = self.unit(N.unit(a))
+
+      override def flatMap[A, B](ma: M[N[A]])(f: A => M[N[B]]): M[N[B]] =
+        //self.flatMap(ma)(na => self.unit(N.flatMap(na)(f(_))))
+        self.apply(self.map[N[A => M[N[B]]], N[A] => N[B]](self.unit(N.unit(f)))(_ => ???))(ma)
+    }
 }
 
 case class Id[A](value: A) {
@@ -106,6 +150,8 @@ case class Id[A](value: A) {
 }
 
 object Monad {
+  import Functor._
+
   val genMonad: Monad[Gen] = new Monad[Gen] {
     def unit[A](a: => A): Gen[A] = Gen.unit(a)
 
@@ -145,6 +191,12 @@ object Monad {
     override def unit[A](a: => A): Id[A] = Id(a)
 
     override def flatMap[A, B](ma: Id[A])(f: A => Id[B]): Id[B] = ma.flatMap(f)
+  }
+
+  val idxMonad: Monad[Idx] = new Monad[Idx] {
+    override def unit[A](a: => A): Idx[A] = a
+
+    override def flatMap[A, B](ma: Idx[A])(f: A => Idx[B]): Idx[B] = f(ma)
   }
 
   def stateMonad[S]: Monad[({type lambda[x] = State[S, x]})#lambda] =
