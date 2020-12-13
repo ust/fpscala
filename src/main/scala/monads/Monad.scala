@@ -3,6 +3,8 @@ package monads
 import java.text.SimpleDateFormat
 import java.util.Date
 
+import monads.Applicative.Const
+import monoids.{Foldable, Monoid}
 import parallelism.Par
 import parallelism.Par.Par
 import propertytesting.Gen
@@ -19,12 +21,32 @@ trait Functor[F[_]] {
 }
 
 
-trait Traverse[F[_]] extends Functor[F] {
+trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
   def traverse[M[_] : Applicative, A, B](fa: F[A])(f: A => M[B]): M[F[B]] = sequence(map(fa)(f))
 
   def sequence[M[_] : Applicative, A](fma: F[M[A]]): M[F[A]] = traverse(fma)(ma => ma)
 
   def map[A, B](fa: F[A])(f: A => B): F[B] = traverse[Functor.Idx, A, B](fa)(f)(Monad.idxMonad)
+
+  def foldMap[A, B](as: F[A])(f: A => B)(implicit mb: Monoid[B]): B =
+    traverse[({type f[x] = Const[B, x]})#f, A, B](as)(f)(mb) // B -> Nothing
+
+  def traverseS[S,A,B](fa: F[A])(f: A => State[S, B]): State[S, F[B]] =
+    traverse[({type f[x] = State[S, x]})#f, A, B](fa)(f)(State.monad)
+
+  def zipWithIndex[A](fa: F[A]): F[(A, Int)] = traverseS(fa) { a =>
+    for {
+      i <- State.get[Int]
+      _ <- State.set(i + 1)
+    } yield (a, i)
+  }.run(0)._1
+
+  override def toList[A](fa: F[A]): List[A] = traverseS(fa) { a =>
+    for {
+      l <- State.get[List[A]]
+      _ <- State.set(a :: l)
+    } yield ()
+  }.run(List.empty[A])._2.reverse
 }
 
 object Traverse {
@@ -33,9 +55,9 @@ object Traverse {
   val optionTraverse: Monad[Option] = Monad.optionMonad
 
   val treeTraverse: Monad[Tree] = new Monad[Tree] {
-    override def unit[A](a: => A): Tree[A] = Tree(a, List.empty)
+    def unit[A](a: => A): Tree[A] = Tree(a, List.empty)
 
-    override def flatMap[A, B](ma: Tree[A])(f: A => Tree[B]): Tree[B] = ma match {
+    def flatMap[A, B](ma: Tree[A])(f: A => Tree[B]): Tree[B] = ma match {
       case Tree(a, mas) => f(a) match {
         case Tree(b, mbs) => Tree(b, mas.map(flatMap(_)(f)) ++ mbs)
       }
@@ -94,18 +116,29 @@ trait Applicative[F[_]] extends Functor[F] {
 
   def product[G[_]](G: Applicative[G]): Applicative[({type f[x] = (F[x], G[x])})#f] =
     new Applicative[({type f[x] = (F[x], G[x])})#f] {
-      override def unit[A](a: => A): (F[A], G[A]) = (self.unit(a), G.unit(a))
+      def unit[A](a: => A): (F[A], G[A]) = (self.unit(a), G.unit(a))
 
-      override def apply[A, B](fab: (F[A => B], G[A => B]))(fa: (F[A], G[A])): (F[B], G[B]) =
+      def apply[A, B](fab: (F[A => B], G[A => B]))(fa: (F[A], G[A])): (F[B], G[B]) =
         (self.apply(fab._1)(fa._1), G.apply(fab._2)(fa._2))
     }
 
   def compose[G[_]](G: Applicative[G]): Applicative[({type f[x] = F[G[x]]})#f] =
     new Applicative[({type f[x] = F[G[x]]})#f] {
-      override def unit[A](a: => A): F[G[A]] = self.unit(G.unit(a))
+      def unit[A](a: => A): F[G[A]] = self.unit(G.unit(a))
 
-      override def apply[A, B](fab: F[G[A => B]])(fa: F[G[A]]): F[G[B]] =
+      def apply[A, B](fab: F[G[A => B]])(fa: F[G[A]]): F[G[B]] =
         self.apply(self.map[G[A => B], G[A] => G[B]](fab)(gab => G.apply(gab)(_)))(fa)
+    }
+}
+
+object Applicative {
+  type Const[A, B] = A
+
+  implicit def monoidApplicative[M](M: Monoid[M]): Applicative[({ type f[x] = Const[M, x] })#f] =
+    new Applicative[({type f[x] = Const[M, x]})#f] {
+      def unit[A](a: => A): M = M.zero
+
+      def apply[A, B](fab: M)(fa: M): M = M.op(fab, fa)
     }
 }
 
@@ -135,9 +168,9 @@ trait Monad[M[_]] extends Applicative[M] {
 
   def compose[N[_]](N: Monad[N]): Monad[({type f[x] = M[N[x]]})#f] =
     new Monad[({type f[x] = M[N[x]]})#f] {
-      override def unit[A](a: => A): M[N[A]] = self.unit(N.unit(a))
+      def unit[A](a: => A): M[N[A]] = self.unit(N.unit(a))
 
-      override def flatMap[A, B](ma: M[N[A]])(f: A => M[N[B]]): M[N[B]] =
+      def flatMap[A, B](ma: M[N[A]])(f: A => M[N[B]]): M[N[B]] =
         //self.flatMap(ma)(na => self.unit(N.flatMap(na)(f(_))))
         self.apply(self.map[N[A => M[N[B]]], N[A] => N[B]](self.unit(N.unit(f)))(_ => ???))(ma)
     }
@@ -152,12 +185,7 @@ case class Id[A](value: A) {
 object Monad {
   import Functor._
 
-  val genMonad: Monad[Gen] = new Monad[Gen] {
-    def unit[A](a: => A): Gen[A] = Gen.unit(a)
-
-    def flatMap[A, B](ma: Gen[A])(f: A => Gen[B]): Gen[B] =
-      ma flatMap f
-  }
+  val genMonad: Monad[Gen] = Gen.monad
 
   val parMonad: Monad[Par] = new Monad[Par] {
     def unit[A](a: => A): Par[A] = Par.unit(a)
@@ -188,24 +216,18 @@ object Monad {
   }
 
   val idMonad: Monad[Id] = new Monad[Id] {
-    override def unit[A](a: => A): Id[A] = Id(a)
+    def unit[A](a: => A): Id[A] = Id(a)
 
-    override def flatMap[A, B](ma: Id[A])(f: A => Id[B]): Id[B] = ma.flatMap(f)
+    def flatMap[A, B](ma: Id[A])(f: A => Id[B]): Id[B] = ma.flatMap(f)
   }
 
   val idxMonad: Monad[Idx] = new Monad[Idx] {
-    override def unit[A](a: => A): Idx[A] = a
+    def unit[A](a: => A): Idx[A] = a
 
-    override def flatMap[A, B](ma: Idx[A])(f: A => Idx[B]): Idx[B] = f(ma)
+    def flatMap[A, B](ma: Idx[A])(f: A => Idx[B]): Idx[B] = f(ma)
   }
 
-  def stateMonad[S]: Monad[({type lambda[x] = State[S, x]})#lambda] =
-    new Monad[({type lambda[x] = State[S, x]})#lambda] {
-      def unit[A](a: => A): State[S, A] = State(s => (a, s))
-
-      def flatMap[A, B](st: State[S, A])(f: A => State[S, B]): State[S, B] =
-        st flatMap f
-    }
+  def stateMonad[S]: Monad[({type lambda[x] = State[S, x]})#lambda] = State.monad
 
   def eitherMonad[E]: Monad[({type f[x] = Either[E, x]})#f] =
     new Monad[({type f[x] = Either[E, x]})#f] {

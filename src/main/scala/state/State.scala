@@ -1,20 +1,20 @@
 package state
 
+import monads.Monad
+
 case class State[S, +A](run: S => (A, S)) {
-  def flatMap[B](f: A => State[S, B]): State[S, B] =
-    State(s => run(s) match {
-      case (a, s1) => f(a).run(s1)
-    })
+  // to do a cache in companion
+  private val monad = State.monad[S]
 
-  def map[B](f: A => B): State[S, B] =
-    flatMap(a => State.unit(f(a)))
+  def flatMap[B](f: A => State[S, B]): State[S, B] = monad.flatMap(this)(f)
 
-  def map2[B, C](sb: State[S, B])
-                (f: (A, B) => C): State[S, C] =
-    flatMap(a => sb.map(f(a, _)))
+  //flatMap(a => State.unit(f(a)))
+  def map[B](f: A => B): State[S, B] = monad.map(this)(f)
 
-  def get: State[S, S] = State(s =>
-    run(s) match { case (_, s1) => (s, s1)})
+  //flatMap(a => sb.map(f(a, _)))
+  def map2[B, C](sb: State[S, B])(f: (A, B) => C): State[S, C] = monad.map2(this, sb)(f)
+
+  def get: State[S, S] = State(s => run(s) match { case (_, s1) => (s, s1)})
 
   def set(s: S): State[S, Unit] = State(_ => ((), s))
 
@@ -35,6 +35,16 @@ object State {
   def get[S]: State[S, S] = State(s => (s, s))
 
   def set[S](s: S): State[S, Unit] = State(_ => ((), s))
+
+  def monad[S]: Monad[({type lambda[x] = State[S, x]})#lambda] =
+    new Monad[({type lambda[x] = State[S, x]})#lambda] {
+      def unit[A](a: => A): State[S, A] = State(s => (a, s))
+
+      def flatMap[A, B](st: State[S, A])(f: A => State[S, B]): State[S, B] = State(s => st.run(s) match {
+          case (a, s1) => f(a).run(s1)
+        })
+
+    }
 
 }
 

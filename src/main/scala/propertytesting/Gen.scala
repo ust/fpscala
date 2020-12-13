@@ -1,20 +1,22 @@
 package propertytesting
 
 import lazyness.Stream
+import monads.Monad
 import propertytesting.Gen._
 import state.RNG.positiveInt
 import state.{RNG, State}
 
 case class Gen[+A](sample: State[RNG, A], exhaustive: Domain[A]) {
 
-  def map[B](f: A => B): Gen[B] = Gen(sample.map(f), exhaustive.map(_.map(f)))
+  def map[B](f: A => B): Gen[B] = monad.map(this)(f)
+    //Gen(sample.map(f), exhaustive.map(_.map(f)))
 
-  def map2[B, C](g: Gen[B])(f: (A, B) => C): Gen[C] = flatMap(a => g.map(f(a, _)))
+  def map2[B, C](g: Gen[B])(f: (A, B) => C): Gen[C] = monad.map2(this, g)(f)
+    //flatMap(a => g.map(f(a, _)))
 
   def **[B](g: Gen[B]): Gen[(A, B)] = (this map2 g) ((_, _))
 
-  def flatMap[B](f: A => Gen[B]): Gen[B] =
-    Gen(sample.flatMap(f(_).sample), Gen.flatDomain(exhaustive)(f(_).exhaustive))
+  def flatMap[B](f: A => Gen[B]): Gen[B] = monad.flatMap(this)(f)
 
   def listOf: SGen[List[A]] = Gen.listOf(this)
 
@@ -46,6 +48,14 @@ case class Sized[+A](forSize: Size => Gen[A]) extends SGen[A]
 object Gen {
   type Size = Int
   type Domain[+A] = Stream[Option[A]]
+
+  val monad: Monad[Gen] = new Monad[Gen] {
+    def unit[A](a: => A): Gen[A] = Gen.unit(a)
+
+    def flatMap[A, B](ma: Gen[A])(f: A => Gen[B]): Gen[B] = ma match {
+      case Gen(sample, exhaustive) => Gen(sample.flatMap(f(_).sample), Gen.flatDomain(exhaustive)(f(_).exhaustive))
+    }
+  }
 
   def bounded[A](a: Stream[A]): Domain[A] = a map (Some(_))
 
