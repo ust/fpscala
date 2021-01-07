@@ -34,19 +34,31 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
   def traverseS[S,A,B](fa: F[A])(f: A => State[S, B]): State[S, F[B]] =
     traverse[({type f[x] = State[S, x]})#f, A, B](fa)(f)(State.monad)
 
-  def zipWithIndex[A](fa: F[A]): F[(A, Int)] = traverseS(fa) { a =>
+  def mapAccum[S, A, B](fa: F[A], s: S)(f: (A, S) => (B, S)): (F[B], S) = traverseS(fa) { a =>
     for {
-      i <- State.get[Int]
-      _ <- State.set(i + 1)
-    } yield (a, i)
-  }.run(0)._1
+      s       <- State.get[S]
+      (b, s1)  = f(a, s)
+      _       <- State.set(s1)
+    } yield b
+  }.run(s)
 
-  override def toList[A](fa: F[A]): List[A] = traverseS(fa) { a =>
-    for {
-      l <- State.get[List[A]]
-      _ <- State.set(a :: l)
-    } yield ()
-  }.run(List.empty[A])._2.reverse
+  def zip[A, B](fa: F[A], fb: F[B]): F[(A, B)] = mapAccum(fa, toList(fb)) { (a, s) => ((a, s.head), s.tail) }._1
+
+  override def foldLeft[A, B](fa: F[A])(z: B)(f: (B, A) => B): B = mapAccum(fa, z)((a, s) => ((), f(s, a)))._2
+
+  override def toList[A](fa: F[A]): List[A] = mapAccum(fa, List.empty[A])((a, s) => ((), a :: s))._2.reverse
+
+  def reverse[A](fa: F[A]): F[A] = mapAccum(fa, ())((a, _) => (a, ()))._1
+
+  def zipWithIndex[A](fa: F[A]): F[(A, Int)] = mapAccum(fa, 0)((a, s) => ((a, s), s + 1))._1
+
+  def fuse[M[_], N[_], A, B](fa: F[A])
+                            (f: A => M[B], g: A => N[B])
+                            (M: Applicative[M], N: Applicative[N]): (M[F[B]], N[F[B]]) = {
+    type P[x] = (M[x], N[x])
+    traverse[P, A, B](fa)(a => (f(a), g(a)))(M product N)
+  }
+
 }
 
 object Traverse {
@@ -227,7 +239,7 @@ object Monad {
     def flatMap[A, B](ma: Idx[A])(f: A => Idx[B]): Idx[B] = f(ma)
   }
 
-  def stateMonad[S]: Monad[({type lambda[x] = State[S, x]})#lambda] = State.monad
+  def stateMonad[S]: Monad[({type f[x] = State[S, x]})#f] = State.monad
 
   def eitherMonad[E]: Monad[({type f[x] = Either[E, x]})#f] =
     new Monad[({type f[x] = Either[E, x]})#f] {
