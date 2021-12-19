@@ -61,10 +61,10 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
     traverse[P, A, B](fa)(a => (f(a), g(a)))(M product N)
   }
 
-  def compose[G[_]](implicit G: Traverse[G]): Traverse[({type f[x] = F[G[x]]})#f] =
-    new Traverse[({type f[x] = F[G[x]]})#f] {
-      override def sequence[M[_] : Applicative, A](fma: F[G[M[A]]]): M[F[G[A]]] = self.sequence(fma)
-    }
+//  def compose[G[_]](implicit G: Traverse[G]): Traverse[({type f[x] = F[G[x]]})#f] =
+//    new Traverse[({type f[x] = F[G[x]]})#f] {
+//      override def sequence[M[_] : Applicative, A](fma: F[G[M[A]]]): M[F[G[A]]] = self.sequence(fma)
+//    }
 
 }
 
@@ -204,23 +204,23 @@ case class Id[A](value: A) {
 object Monad {
   import Functor._
 
-  def composeM[M[_],N[_]](M: Monad[M], N: Monad[N], T: Traverse[N]): Monad[({type f[x] = M[N[x]]})#f] =
-    new Monad[({type f[x] = M[N[x]]})#f] {
-      override def unit[A](a: => A): M[N[A]] = M.unit(N.unit(a))
-
-      override def flatMap[A, B](ma: M[N[A]])(f: A => M[N[B]]): M[N[B]] =
-        M.flatMap(ma)(na =>
-          M.map(
-            T.traverse(na)(a =>
-              M.flatMap(f(a))(nb =>
-                T.traverse(nb)(
-                  M.unit
-                )(M)
-              )
-            )(M)
-          )(N.join)
-        )
-    }
+//  def composeM[M[_],N[_]](M: Monad[M], N: Monad[N], T: Traverse[N]): Monad[({type f[x] = M[N[x]]})#f] =
+//    new Monad[({type f[x] = M[N[x]]})#f] {
+//      override def unit[A](a: => A): M[N[A]] = M.unit(N.unit(a))
+//
+//      override def flatMap[A, B](ma: M[N[A]])(f: A => M[N[B]]): M[N[B]] =
+//        M.flatMap(ma)(na =>
+//          M.map(
+//            T.traverse(na)(a =>
+//              M.flatMap(f(a))(nb =>
+//                T.traverse(nb)(
+//                  M.unit
+//                )(M)
+//              )
+//            )(M)
+//          )(N.join)
+//        )
+//    }
 
   val genMonad: Monad[Gen] = Gen.monad
 
