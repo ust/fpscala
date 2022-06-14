@@ -1,12 +1,25 @@
 package leetcode
 
 object Runner extends App {
-
+  println {val a = Array(-1); s"array:${a.mkString} result: ${Solution.threeSum(a)}, should be []"}
+  println {val a = Array(-1,0,1,2,-3); s"array:${a.mkString} result: ${Solution.threeSum(a)}, should be [[-3,1,2],[-1,0,1]]"}
+  println {val a = Array(-1,0,1,2,-1,-4); s"array:${a.mkString} result: ${Solution.threeSum(a)}, should be [[-1,-1,2],[-1,0,1]]"}
 }
 
 object Solution {
   def threeSum(nums: Array[Int]): List[List[Int]] = {
-    ???
+    val trimmed = nums.groupBy(identity).map(_._2.take(3)).flatMap(_.toList).toList.sorted.zipWithIndex
+    val indices2 = trimmed.groupBy(_._1).map { case (k, v) => k -> v.sorted }
+
+    (for {
+      (n, i) <- trimmed
+      sum2    = 0 - n
+      (m, j) <- trimmed
+      if i < j
+      ks     <- indices2.get(sum2 - m).toSeq
+      (_, k) <- ks
+      if j < k
+    } yield List(n, m, sum2 - m).sorted).distinct
   }
 }
 
