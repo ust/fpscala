@@ -1,33 +1,15 @@
 package report
 
 import investment.Profit
-import parser.model.{Dividend, Entry, Purchase, Sale, Transaction}
+import parser.model._
+import util.FileDataReader
 
-import java.nio.charset.CodingErrorAction
 import scala.annotation.tailrec
-import scala.io.Codec
 
 object ExanteProfitReport extends App {
-  implicit val codec: Codec = Codec("UTF-16")
-  codec.onMalformedInput(CodingErrorAction.REPLACE)
-  codec.onUnmappableCharacter(CodingErrorAction.REPLACE)
-
   val zero = BigDecimal(0.0)
 
-  // read exante .csv
-  val source = io.Source.fromResource("Custom_CNV8068.001.csv")
-  // read usd rates .csv
-
-  // parse .csv
-  // "Transaction ID"	"Account ID"	"Symbol ID"	"ISIN"	"Operation type"	"When"	"Sum"	"Asset"	"EUR equivalent"	"Comment"
-  private val data: Seq[Array[String]] = (for {
-    // drop header
-    line <- source.getLines().drop(31)
-    //_ = println(line)
-    columns = line.split("\t").map(s => s.stripPrefix("\"").stripSuffix("\""))
-  } yield columns).toSeq
-
-  val entries: Seq[Entry] = data.map(Transaction(_))
+  val entries: Seq[Entry] = new FileDataReader()("Custom_CNV8068.001.csv").map(Transaction(_))
 
   def trade(entries: Seq[Entry]) = {
     val Some(cash) = entries.find(e => e.operation == "TRADE" && e.asset == "USD")
@@ -154,5 +136,5 @@ object ExanteProfitReport extends App {
     s"capital gain: $capitalGain")
 
 
-  source.close()
+
 }
