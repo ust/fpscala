@@ -1,12 +1,13 @@
-package tax
+package report
+
+import investment.Profit
+import parser.model.{Dividend, Entry, Purchase, Sale, Transaction}
 
 import java.nio.charset.CodingErrorAction
-import java.text.DecimalFormat
-import java.util.Date
 import scala.annotation.tailrec
 import scala.io.Codec
 
-object TaxCalculator extends App {
+object ExanteProfitReport extends App {
   implicit val codec: Codec = Codec("UTF-16")
   codec.onMalformedInput(CodingErrorAction.REPLACE)
   codec.onUnmappableCharacter(CodingErrorAction.REPLACE)
@@ -24,8 +25,7 @@ object TaxCalculator extends App {
     line <- source.getLines().drop(31)
     //_ = println(line)
     columns = line.split("\t").map(s => s.stripPrefix("\"").stripSuffix("\""))
-  } yield columns ).toSeq
-  source.close()
+  } yield columns).toSeq
 
   val entries: Seq[Entry] = data.map(Transaction(_))
 
@@ -120,7 +120,9 @@ object TaxCalculator extends App {
     def purchasesInRange(from: Double, to: Double) = {
       // drop while total is less or equal then from
       // then take while total is less or equal then to
-      purchases.dropWhile(_.totalQty <= from).span(_.totalQty <= to) match { case (h, t) => h ++ t.take(1)}
+      purchases.dropWhile(_.totalQty <= from).span(_.totalQty <= to) match {
+        case (h, t) => h ++ t.take(1)
+      }
     }
 
     def lastOpt(range: Seq[Purchase]) = range.headOption.toSeq
@@ -141,7 +143,7 @@ object TaxCalculator extends App {
     //.filter(_.stock == "HII.NYSE")
     .sortBy(_.sellDate)
     .foreach(p => println(p.toExcel))
-    //.foreach(p => println(p.decimalFormat.format(p.profit)))
+  //.foreach(p => println(p.decimalFormat.format(p.profit)))
 
   val capitalGain = profits.flatten.map(_.profit).sum
   val totalDividendsAmount = dividends.map(_.price).sum
@@ -150,59 +152,7 @@ object TaxCalculator extends App {
     s"dividends total:${totalDividendsAmount + totalDividendTaxesAmount}, " +
     s"gross: $totalDividendsAmount, tax: $totalDividendTaxesAmount, " +
     s"capital gain: $capitalGain")
-}
 
-case class Entry(symbol: String, asset: String, operation: String, date: Date, qty: BigDecimal)
 
-sealed trait Transaction {
-  def stock: String
-  def date: Date
-  def price: BigDecimal
-  def qty: Int
-  def pricePerUnit: BigDecimal = price / qty
-  def toExcel: String = s"${getClass.getName} $stock\t${date}\t$qty\t$pricePerUnit\t$price"
-}
-
-object Transaction {
-  val readDateformat = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
-
-  def apply(array: Array[String]): Entry =
-    (array(2), array(7), array(4), readDateformat.parse(array(5)), array(6).toDouble) match {
-    case (symbol, asset, operation, date, sum) => Entry(symbol, asset, operation, date, sum)
-  }
-
-}
-
-case class Purchase(stock: String, date: Date, price: BigDecimal, qty: Int,
-                    totalQty: Int = 0, totalAmount: BigDecimal = 0.0) extends Transaction {
-  def tax: Double = 0.0
-}
-
-case class Sale(stock: String, date: Date, price: BigDecimal, qty: Int,
-                totalQty: Int = 0, totalAmount: BigDecimal = 0.0) extends Transaction {
-  def tax: Double = 0.0
-}
-
-case class Dividend(stock: String, date: Date, price: BigDecimal, qty: Int, tax: BigDecimal) extends Transaction
-
-case class Profit(stock: String, purchaseDate: Date, sellDate: Date, qty: Int, purchasePrice: BigDecimal, sellPrice: BigDecimal) {
-  val decimalFormat = {
-    import java.text.DecimalFormatSymbols
-    val symbols = new DecimalFormatSymbols()
-    symbols.setDecimalSeparator(',')
-    symbols.setGroupingSeparator('.')
-    new DecimalFormat("###.###", symbols)
-  }
-  val dataFormat = new java.text.SimpleDateFormat("dd.MM.yyyy hh:mm:ss")
-
-  def profit: BigDecimal = (sellPrice - purchasePrice) * qty
-
-  def toExcel: String =
-    s"$stock\t" +
-      s"${dataFormat.format(purchaseDate)}\t" +
-      s"${dataFormat.format(sellDate)}\t" +
-      s"$qty\t" +
-      s"${decimalFormat.format(purchasePrice)}\t" +
-      s"${decimalFormat.format(sellPrice)}\t" +
-      s"${decimalFormat.format(profit)}"
+  source.close()
 }
