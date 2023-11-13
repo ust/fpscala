@@ -2,14 +2,14 @@ package report
 
 import investment.Profit
 import parser.model._
-import util.FileDataReader
+import util.{ExanteParser, FileDataReader}
 
 import scala.annotation.tailrec
 
 object ExanteProfitReport extends App {
   val zero = BigDecimal(0.0)
 
-  val entries: Seq[Entry] = new FileDataReader()("Custom_CNV8068.001.csv").map(Transaction(_))
+  val entries: Seq[Entry] = (new FileDataReader with ExanteParser)("Custom_CNV8068.001.csv").map(Transaction(_))
 
   def trade(entries: Seq[Entry]) = {
     val Some(cash) = entries.find(e => e.operation == "TRADE" && e.asset == "USD")

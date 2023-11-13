@@ -2,7 +2,7 @@
 
 ## Epics
 
-Domain
+Domain (extract ADTs from ExanteReport)
 
 Parsers (IB, Exante)
 
@@ -11,6 +11,8 @@ Parsers (IB, Exante)
 Generating: capital gains + dividends
 
 Generating: useful stats and metrics
+
+Pricing model (gdpr, UX, trials, support)
 
 Hosting: aws lambda scala
 

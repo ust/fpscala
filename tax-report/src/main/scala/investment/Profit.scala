@@ -3,6 +3,21 @@ package investment
 import java.text.DecimalFormat
 import java.util.Date
 
+case class Account(id: String, owner: String)
+case class Portfolio(holdings: Seq[Security])
+
+trait Security { def ticker: String; def name: String }
+case class Bond(ticker: String, name: String) extends Security
+case class Stock(ticker: String, name: String) extends Security
+
+case class Trade(security: Security, amount: BigDecimal, price: BigDecimal, time: Date)
+abstract class Fee(val amount: BigDecimal, val date: Date)
+case class Dividend(stock: Stock, amount: BigDecimal, date: Date)
+abstract class Interest(desc: String, amount: BigDecimal, date: Date)
+case class TradeFee(override val amount: BigDecimal, override val date: Date) extends Fee(amount, date)
+abstract class Tax(amount: BigDecimal)
+
+
 case class Profit(stock: String, purchaseDate: Date, sellDate: Date, qty: Int, purchasePrice: BigDecimal, sellPrice: BigDecimal) {
   val decimalFormat = {
     import java.text.DecimalFormatSymbols

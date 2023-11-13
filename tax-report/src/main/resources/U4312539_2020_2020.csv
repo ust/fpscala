@@ -1,0 +1,471 @@
+﻿Statement,Header,Field Name,Field Value
+Statement,Data,BrokerName,Interactive Brokers LLC
+Statement,Data,BrokerAddress,"Two Pickwick Plaza, Greenwich, CT 06830"
+Statement,Data,Title,Activity Statement
+Statement,Data,Period,"January 1, 2020 - December 31, 2020"
+Statement,Data,WhenGenerated,"2023-11-13, 14:35:39 EST"
+Account Information,Header,Field Name,Field Value
+Account Information,Data,Name,Yaroslav Patenko
+Account Information,Data,Account,U4312539
+Account Information,Data,Account Type,Individual
+Account Information,Data,Customer Type,Individual
+Account Information,Data,Account Capabilities,Margin
+Account Information,Data,Base Currency,USD
+Net Asset Value,Header,Asset Class,Prior Total,Current Long,Current Short,Current Total,Change
+Net Asset Value,Data,Cash ,0,763.5371,0,763.5371,763.5371
+Net Asset Value,Data,Stock,0,21235.64,0,21235.64,21235.64
+Net Asset Value,Data,Dividend Accruals,0,23.18,0,23.18,23.18
+Net Asset Value,Data,Total,0,22022.3571,0,22022.3571,22022.3571
+Net Asset Value,Header,Time Weighted Rate of Return
+Net Asset Value,Data,5.313590336%
+Change in NAV,Header,Field Name,Field Value
+Change in NAV,Data,Starting Value,0
+Change in NAV,Data,Mark-to-Market,786.4971
+Change in NAV,Data,Deposits & Withdrawals,21150
+Change in NAV,Data,Dividends,105.01
+Change in NAV,Data,Withholding Tax,-15.76
+Change in NAV,Data,Change in Dividend Accruals,23.18
+Change in NAV,Data,Interest,0.43
+Change in NAV,Data,Other Fees,-7
+Change in NAV,Data,Commissions,-20
+Change in NAV,Data,Ending Value,22022.3571
+Mark-to-Market Performance Summary,Header,Asset Category,Symbol,Prior Quantity,Current Quantity,Prior Price,Current Price,Mark-to-Market P/L Position,Mark-to-Market P/L Transaction,Mark-to-Market P/L Commissions,Mark-to-Market P/L Other,Mark-to-Market P/L Total,Code
+Mark-to-Market Performance Summary,Data,Stocks,AAAU,0,0,--,--,-313,8,-2,0,-307,
+Mark-to-Market Performance Summary,Data,Stocks,AAAU,0,200,--,18.9400,148,0,0,0,148,
+Mark-to-Market Performance Summary,Data,Stocks,ABBV,0,11,--,107.1500,186.23,-3.08,-1,11.03,193.18,
+Mark-to-Market Performance Summary,Data,Stocks,ADM,0,21,--,50.4100,92.19,-4.788,-1,6.43,92.832,
+Mark-to-Market Performance Summary,Data,Stocks,BMY,0,16,--,62.0300,13.28,-7.6,-1,0,4.68,
+Mark-to-Market Performance Summary,Data,Stocks,CSCO,0,23,--,44.7500,46.69,5.98,-1,7.04,58.71,
+Mark-to-Market Performance Summary,Data,Stocks,EBTC,0,43,--,25.5500,134.16,-19.78,-1,6.4,119.78,
+Mark-to-Market Performance Summary,Data,Stocks,HII,0,6,--,170.4800,136.48,-26.8,-2,5.81,113.49,
+Mark-to-Market Performance Summary,Data,Stocks,INTC,0,40,--,49.8200,22.8,16.038,-2,11.22,48.058,
+Mark-to-Market Performance Summary,Data,Stocks,LEG,0,23,--,44.3000,25.99,-5.29,-1,7.82,27.52,
+Mark-to-Market Performance Summary,Data,Stocks,LMT,0,3,--,354.9800,12.36,-15.81,-1,6.63,2.18,
+Mark-to-Market Performance Summary,Data,Stocks,MTB,0,9,--,127.3000,225.36,-3.24,-1,8.41,229.53,
+Mark-to-Market Performance Summary,Data,Stocks,NFG,0,23,--,41.1300,-7.82,-6.8379,-1,0,-15.6579,
+Mark-to-Market Performance Summary,Data,Stocks,NOC,0,6,--,304.7200,22.32,10.575,-2,0,30.895,
+Mark-to-Market Performance Summary,Data,Stocks,T,0,34,--,28.7600,-8.5,2.38,-1,0,-7.12,
+Mark-to-Market Performance Summary,Data,Stocks,TDS,0,59,--,18.5700,92.63,7.08,-1,8.52,107.23,
+Mark-to-Market Performance Summary,Data,Stocks,WBA,0,25,--,39.8800,0.625,-0.125,-1,9.94,9.44,
+Mark-to-Market Performance Summary,Data,Total,,,,,,829.795,-43.2979,-20,89.25,855.7471,
+Mark-to-Market Performance Summary,Data,Forex,USD,0,763.5371,1.0000,1.0000,0,0,0,0,0,
+Mark-to-Market Performance Summary,Data,Total,,,,,,0,0,0,0,0,
+Mark-to-Market Performance Summary,Data,Total (All Assets),,,,,,829.795,-43.2979,-20,89.25,855.7471,
+Mark-to-Market Performance Summary,Data,Broker Interest Paid and Received,,,,,,,,,,0.43,
+Mark-to-Market Performance Summary,Data,Other Fees,,,,,,,,,,-7,
+Total P/L for Statement Period,,,,,,,,,,,,849.1771,
+Realized & Unrealized Performance Summary,Header,Asset Category,Symbol,Cost Adj.,Realized S/T Profit,Realized S/T Loss,Realized L/T Profit,Realized L/T Loss,Realized Total,Unrealized S/T Profit,Unrealized S/T Loss,Unrealized L/T Profit,Unrealized L/T Loss,Unrealized Total,Total,Code
+Realized & Unrealized Performance Summary,Data,Stocks,AAAU,0,0,0,0,0,0,0,-159,0,0,-159,-159,
+Realized & Unrealized Performance Summary,Data,Stocks,ABBV,0,0,0,0,0,0,182.15,0,0,0,182.15,182.15,
+Realized & Unrealized Performance Summary,Data,Stocks,ADM,0,0,0,0,0,0,86.402,0,0,0,86.402,86.402,
+Realized & Unrealized Performance Summary,Data,Stocks,BMY,0,0,0,0,0,0,4.68,0,0,0,4.68,4.68,
+Realized & Unrealized Performance Summary,Data,Stocks,CSCO,0,0,0,0,0,0,51.67,0,0,0,51.67,51.67,
+Realized & Unrealized Performance Summary,Data,Stocks,EBTC,0,0,0,0,0,0,113.38,0,0,0,113.38,113.38,
+Realized & Unrealized Performance Summary,Data,Stocks,HII,0,0,0,0,0,0,107.68,0,0,0,107.68,107.68,
+Realized & Unrealized Performance Summary,Data,Stocks,INTC,0,0,0,0,0,0,37.6,-0.762,0,0,36.838,36.838,
+Realized & Unrealized Performance Summary,Data,Stocks,LEG,0,0,0,0,0,0,19.7,0,0,0,19.7,19.7,
+Realized & Unrealized Performance Summary,Data,Stocks,LMT,0,0,0,0,0,0,0,-4.45,0,0,-4.45,-4.45,
+Realized & Unrealized Performance Summary,Data,Stocks,MTB,0,0,0,0,0,0,221.12,0,0,0,221.12,221.12,
+Realized & Unrealized Performance Summary,Data,Stocks,NFG,0,0,0,0,0,0,0,-15.6579,0,0,-15.6579,-15.6579,
+Realized & Unrealized Performance Summary,Data,Stocks,NOC,0,0,0,0,0,0,30.895,0,0,0,30.895,30.895,
+Realized & Unrealized Performance Summary,Data,Stocks,T,0,0,0,0,0,0,0,-7.12,0,0,-7.12,-7.12,
+Realized & Unrealized Performance Summary,Data,Stocks,TDS,0,0,0,0,0,0,98.71,0,0,0,98.71,98.71,
+Realized & Unrealized Performance Summary,Data,Stocks,WBA,0,0,0,0,0,0,0,-0.5,0,0,-0.5,-0.5,
+Realized & Unrealized Performance Summary,Data,Total,,0,0,0,0,0,0,953.987,-187.4899,0,0,766.4971,766.4971,
+Realized & Unrealized Performance Summary,Data,Total (All Assets),,0,0,0,0,0,0,953.987,-187.4899,0,0,766.4971,766.4971,
+Cash Report,Header,Currency Summary,Currency,Total,Securities,Futures,
+Cash Report,Data,Starting Cash,Base Currency Summary,0,0,0,
+Cash Report,Data,Commissions,Base Currency Summary,-20,-20,0,
+Cash Report,Data,Deposits,Base Currency Summary,21150,21150,0,
+Cash Report,Data,Dividends,Base Currency Summary,98.89,98.89,0,
+Cash Report,Data,Broker Interest Paid and Received,Base Currency Summary,0.43,0.43,0,
+Cash Report,Data,Trades (Purchase),Base Currency Summary,-20449.1429,-20449.1429,0,
+Cash Report,Data,Other Fees,Base Currency Summary,-7,-7,0,
+Cash Report,Data,Payment In Lieu of Dividends,Base Currency Summary,6.12,6.12,0,
+Cash Report,Data,Withholding Tax,Base Currency Summary,-15.76,-15.76,0,
+Cash Report,Data,Ending Cash,Base Currency Summary,763.5371,763.5371,0,
+Cash Report,Data,Ending Settled Cash,Base Currency Summary,763.5371,763.5371,0,
+Open Positions,Header,DataDiscriminator,Asset Category,Currency,Symbol,Quantity,Mult,Cost Price,Cost Basis,Close Price,Value,Unrealized P/L,Code
+Open Positions,Data,Summary,Stocks,USD,AAAU,200,1,19.735,3947,18.94,3788,-159,
+Open Positions,Data,Summary,Stocks,USD,ABBV,11,1,90.590909091,996.5,107.15,1178.65,182.15,
+Open Positions,Data,Summary,Stocks,USD,ADM,21,1,46.295619048,972.208,50.41,1058.61,86.402,
+Open Positions,Data,Summary,Stocks,USD,BMY,16,1,61.7375,987.8,62.03,992.48,4.68,
+Open Positions,Data,Summary,Stocks,USD,CSCO,23,1,42.503478261,977.58,44.75,1029.25,51.67,
+Open Positions,Data,Summary,Stocks,USD,EBTC,43,1,22.913255814,985.27,25.55,1098.65,113.38,
+Open Positions,Data,Summary,Stocks,USD,HII,6,1,152.533333333,915.2,170.48,1022.88,107.68,
+Open Positions,Data,Summary,Stocks,USD,INTC,40,1,48.89905,1955.962,49.82,1992.8,36.838,
+Open Positions,Data,Summary,Stocks,USD,LEG,23,1,43.443478261,999.2,44.3,1018.9,19.7,
+Open Positions,Data,Summary,Stocks,USD,LMT,3,1,356.463333333,1069.39,354.98,1064.94,-4.45,
+Open Positions,Data,Summary,Stocks,USD,MTB,9,1,102.731111111,924.58,127.3,1145.7,221.12,
+Open Positions,Data,Summary,Stocks,USD,NFG,23,1,41.810778261,961.6479,41.13,945.99,-15.6579,
+Open Positions,Data,Summary,Stocks,USD,NOC,6,1,299.570833333,1797.425,304.72,1828.32,30.895,
+Open Positions,Data,Summary,Stocks,USD,T,34,1,28.969411765,984.96,28.76,977.84,-7.12,
+Open Positions,Data,Summary,Stocks,USD,TDS,59,1,16.896949153,996.92,18.57,1095.63,98.71,
+Open Positions,Data,Summary,Stocks,USD,WBA,25,1,39.9,997.5,39.88,997,-0.5,
+Open Positions,Total,,Stocks,USD,,,,,20469.1429,,21235.64,766.4971,
+Net Stock Position Summary,Header,Asset Category,Currency,Symbol,Description,Shares at IB,Shares Borrowed,Shares Lent,Net Shares
+Net Stock Position Summary,Data,Stocks,USD,AAAU,GOLDMAN SACHS PHYSICAL GOLD,200,0,0,200
+Net Stock Position Summary,Data,Stocks,USD,ABBV,ABBVIE INC,11,0,0,11
+Net Stock Position Summary,Data,Stocks,USD,ADM,ARCHER-DANIELS-MIDLAND CO,21,0,0,21
+Net Stock Position Summary,Data,Stocks,USD,BMY,BRISTOL-MYERS SQUIBB CO,16,0,0,16
+Net Stock Position Summary,Data,Stocks,USD,CSCO,CISCO SYSTEMS INC,23,0,0,23
+Net Stock Position Summary,Data,Stocks,USD,EBTC,ENTERPRISE BANCORP INC,43,0,0,43
+Net Stock Position Summary,Data,Stocks,USD,HII,HUNTINGTON INGALLS INDUSTRIE,6,0,0,6
+Net Stock Position Summary,Data,Stocks,USD,INTC,INTEL CORP,40,0,0,40
+Net Stock Position Summary,Data,Stocks,USD,LEG,LEGGETT & PLATT INC,23,0,0,23
+Net Stock Position Summary,Data,Stocks,USD,LMT,LOCKHEED MARTIN CORP,3,0,0,3
+Net Stock Position Summary,Data,Stocks,USD,MTB,M & T BANK CORP,9,0,0,9
+Net Stock Position Summary,Data,Stocks,USD,NFG,NATIONAL FUEL GAS CO,23,0,0,23
+Net Stock Position Summary,Data,Stocks,USD,NOC,NORTHROP GRUMMAN CORP,6,0,0,6
+Net Stock Position Summary,Data,Stocks,USD,T,AT&T INC,34,0,0,34
+Net Stock Position Summary,Data,Stocks,USD,TDS,TELEPHONE AND DATA SYSTEMS,59,0,0,59
+Net Stock Position Summary,Data,Stocks,USD,WBA,WALGREENS BOOTS ALLIANCE INC,25,0,0,25
+Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,MTM P/L,Code
+Trades,Data,Order,Stocks,USD,AAAU,"2020-07-27, 11:36:03",100,19.3,19.34,-1930,-1,1931,0,4,O
+Trades,Data,Order,Stocks,USD,AAAU,"2020-08-10, 14:42:50",100,20.15,20.19,-2015,-1,2016,0,4,O
+Trades,SubTotal,,Stocks,USD,AAAU,,200,,,-3945,-2,3947,0,8,
+Trades,Data,Order,Stocks,USD,ABBV,"2020-09-08, 15:50:00",11,90.5,90.22,-995.5,-1,996.5,0,-3.08,O
+Trades,SubTotal,,Stocks,USD,ABBV,,11,,,-995.5,-1,996.5,0,-3.08,
+Trades,Data,Order,Stocks,USD,ADM,"2020-09-10, 11:55:52",21,46.248,46.02,-971.208,-1,972.208,0,-4.788,O
+Trades,SubTotal,,Stocks,USD,ADM,,21,,,-971.208,-1,972.208,0,-4.788,
+Trades,Data,Order,Stocks,USD,BMY,"2020-12-07, 12:55:51",16,61.675,61.2,-986.8,-1,987.8,0,-7.6,O
+Trades,SubTotal,,Stocks,USD,BMY,,16,,,-986.8,-1,987.8,0,-7.6,
+Trades,Data,Order,Stocks,USD,CSCO,"2020-08-13, 14:37:42",23,42.46,42.72,-976.58,-1,977.58,0,5.98,O
+Trades,SubTotal,,Stocks,USD,CSCO,,23,,,-976.58,-1,977.58,0,5.98,
+Trades,Data,Order,Stocks,USD,EBTC,"2020-10-28, 09:30:01",43,22.89,22.43,-984.27,-1,985.27,0,-19.78,O
+Trades,SubTotal,,Stocks,USD,EBTC,,43,,,-984.27,-1,985.27,0,-19.78,
+Trades,Data,Order,Stocks,USD,HII,"2020-09-08, 14:57:36",2,142.6,141.76,-285.2,-1,286.2,0,-1.68,O
+Trades,Data,Order,Stocks,USD,HII,"2020-11-04, 09:31:38",4,157,150.72,-628,-1,629,0,-25.12,O
+Trades,SubTotal,,Stocks,USD,HII,,6,,,-913.2,-2,915.2,0,-26.8,
+Trades,Data,Order,Stocks,USD,INTC,"2020-08-03, 10:28:30",20,47.89,48.3,-957.8,-1,958.8,0,8.2,O
+Trades,Data,Order,Stocks,USD,INTC,"2020-12-07, 13:13:03",20,49.8081,50.2,-996.162,-1,997.162,0,7.838,O
+Trades,SubTotal,,Stocks,USD,INTC,,40,,,-1953.962,-2,1955.962,0,16.038,
+Trades,Data,Order,Stocks,USD,LEG,"2020-09-09, 13:14:23",23,43.4,43.17,-998.2,-1,999.2,0,-5.29,O
+Trades,SubTotal,,Stocks,USD,LEG,,23,,,-998.2,-1,999.2,0,-5.29,
+Trades,Data,Order,Stocks,USD,LMT,"2020-10-28, 09:35:47",3,356.13,350.86,-1068.39,-1,1069.39,0,-15.81,O
+Trades,SubTotal,,Stocks,USD,LMT,,3,,,-1068.39,-1,1069.39,0,-15.81,
+Trades,Data,Order,Stocks,USD,MTB,"2020-09-08, 15:50:55",9,102.62,102.26,-923.58,-1,924.58,0,-3.24,O
+Trades,SubTotal,,Stocks,USD,MTB,,9,,,-923.58,-1,924.58,0,-3.24,
+Trades,Data,Order,Stocks,USD,NFG,"2020-12-07, 12:52:28",23,41.7673,41.47,-960.6479,-1,961.6479,0,-6.8379,O
+Trades,SubTotal,,Stocks,USD,NFG,,23,,,-960.6479,-1,961.6479,0,-6.8379,
+Trades,Data,Order,Stocks,USD,NOC,"2020-12-07, 12:50:35",3,299.975,301,-899.925,-1,900.925,0,3.075,O
+Trades,Data,Order,Stocks,USD,NOC,"2020-12-07, 13:07:22",3,298.5,301,-895.5,-1,896.5,0,7.5,O
+Trades,SubTotal,,Stocks,USD,NOC,,6,,,-1795.425,-2,1797.425,0,10.575,
+Trades,Data,Order,Stocks,USD,T,"2020-12-21, 10:48:46",34,28.94,29.01,-983.96,-1,984.96,0,2.38,O
+Trades,SubTotal,,Stocks,USD,T,,34,,,-983.96,-1,984.96,0,2.38,
+Trades,Data,Order,Stocks,USD,TDS,"2020-11-02, 10:17:07",59,16.88,17,-995.92,-1,996.92,0,7.08,O
+Trades,SubTotal,,Stocks,USD,TDS,,59,,,-995.92,-1,996.92,0,7.08,
+Trades,Data,Order,Stocks,USD,WBA,"2020-11-17, 09:30:02",25,39.86,39.855,-996.5,-1,997.5,0,-0.125,O
+Trades,SubTotal,,Stocks,USD,WBA,,25,,,-996.5,-1,997.5,0,-0.125,
+Trades,Total,,Stocks,USD,,,,,,-20449.1429,-20,20469.1429,0,-43.2979, 
+Corporate Actions,Header,Asset Category,Currency,Report Date,Date/Time,Description,Quantity,Proceeds,Value,Realized P/L,Code
+Corporate Actions,Data,Stocks,USD,2020-12-14,"2020-12-11, 20:25:00","AAAU(US7154261025) CUSIP/ISIN Change to (US38150K1034) (AAAU, GOLDMAN SACHS PHYSICAL GOLD ET, US38150K1034)",200,0,0,0,
+Corporate Actions,Data,Stocks,USD,2020-12-14,"2020-12-11, 20:25:00","AAAU(US7154261025) CUSIP/ISIN Change to (US38150K1034) (AAAU.OLD, PERTH MINT PHYSICAL GOLD ETF, US7154261025)",-200,0,0,0,
+Corporate Actions,Data,Total,,,,,,0,0,0,
+Deposits & Withdrawals,Header,Currency,Settle Date,Description,Amount
+Deposits & Withdrawals,Data,USD,2020-07-24,Electronic Fund Transfer,10500
+Deposits & Withdrawals,Data,USD,2020-10-09,Electronic Fund Transfer,5500
+Deposits & Withdrawals,Data,USD,2020-12-07,Electronic Fund Transfer,5150
+Deposits & Withdrawals,Data,Total,,,21150
+Fees,Header,Subtitle,Currency,Date,Description,Amount
+Fees,Data,Other Fees,USD,2020-09-03,Y*****11:US CONSOLIDATED SNAPSHOT FOR AUG 2020,-0.02
+Fees,Data,Other Fees,USD,2020-09-03,Y*****11:US CONSOLIDATED SNAPSHOT FOR AUG 2020,0.02
+Fees,Data,Other Fees,USD,2020-10-05,Y*****11:US CONSOLIDATED SNAPSHOT FOR SEP 2020,-0.06
+Fees,Data,Other Fees,USD,2020-10-05,Y*****11:US CONSOLIDATED SNAPSHOT FOR SEP 2020,0.06
+Fees,Data,Other Fees,USD,2020-11-04,Y*****11:GLOBAL SNAPSHOT FOR OCT 2020,-0.03
+Fees,Data,Other Fees,USD,2020-11-04,Y*****11:GLOBAL SNAPSHOT FOR OCT 2020,0.03
+Fees,Data,Other Fees,USD,2020-12-03,Balance of Monthly Minimum Fee for Nov 2020,-7
+Fees,Data,Other Fees,USD,2020-12-03,Y*****11:US CONSOLIDATED SNAPSHOT FOR NOV 2020,-0.11
+Fees,Data,Other Fees,USD,2020-12-03,Y*****11:US CONSOLIDATED SNAPSHOT FOR NOV 2020,0.11
+Fees,Data,Total,,,,-7
+Fees,Notes,"Market data is provided by Global Financial Information Services (GmbH). Your local broker collects amounts owed for fees and tax for such data on behalf of Global Financial Information Services (GmbH). Note, you are responsible for any applicable taxes relating to the provision of these services."
+Dividends,Header,Currency,Date,Description,Amount
+Dividends,Data,USD,2020-09-01,INTC (US4581401001) Cash Dividend USD 0.33 (Ordinary Dividend),6.6
+Dividends,Data,USD,2020-10-15,LEG(US5246601075) Cash Dividend USD 0.40 per Share (Ordinary Dividend),9.2
+Dividends,Data,USD,2020-10-21,CSCO (US17275R1023) Cash Dividend USD 0.36 (Ordinary Dividend),8.28
+Dividends,Data,USD,2020-11-16,ABBV(US00287Y1091) Cash Dividend USD 1.18 per Share (Ordinary Dividend),12.98
+Dividends,Data,USD,2020-12-01,EBTC(US2936681095) Cash Dividend USD 0.175 per Share (Ordinary Dividend),7.53
+Dividends,Data,USD,2020-12-01,INTC (US4581401001) Cash Dividend USD 0.33 (Ordinary Dividend),6.6
+Dividends,Data,USD,2020-12-10,ADM(US0394831020) Cash Dividend USD 0.36 per Share (Ordinary Dividend),7.56
+Dividends,Data,USD,2020-12-11,HII(US4464131063) Cash Dividend USD 1.14 per Share (Ordinary Dividend),6.84
+Dividends,Data,USD,2020-12-11,WBA(US9314271084) Cash Dividend USD 0.4675 per Share (Ordinary Dividend),11.69
+Dividends,Data,USD,2020-12-24,LMT(US5398301094) Cash Dividend USD 2.60 per Share (Ordinary Dividend),7.8
+Dividends,Data,USD,2020-12-30,TDS(US8794338298) Cash Dividend USD 0.17 per Share (Ordinary Dividend),3.91
+Dividends,Data,USD,2020-12-30,TDS(US8794338298) Payment in Lieu of Dividend (Ordinary Dividend),6.12
+Dividends,Data,USD,2020-12-31,MTB(US55261F1049) Cash Dividend USD 1.10 per Share (Ordinary Dividend),9.9
+Dividends,Data,Total,,,105.01
+Withholding Tax,Header,Currency,Date,Description,Amount,Code
+Withholding Tax,Data,USD,2020-09-01,INTC (US4581401001) Cash Dividend USD 0.33 - US Tax,-0.99,
+Withholding Tax,Data,USD,2020-10-15,LEG(US5246601075) Cash Dividend USD 0.40 per Share - US Tax,-1.38,
+Withholding Tax,Data,USD,2020-10-21,CSCO (US17275R1023) Cash Dividend USD 0.36 - US Tax,-1.24,
+Withholding Tax,Data,USD,2020-11-16,ABBV(US00287Y1091) Cash Dividend USD 1.18 per Share - US Tax,-1.95,
+Withholding Tax,Data,USD,2020-12-01,EBTC(US2936681095) Cash Dividend USD 0.175 per Share - US Tax,-1.13,
+Withholding Tax,Data,USD,2020-12-01,INTC (US4581401001) Cash Dividend USD 0.33 - US Tax,-0.99,
+Withholding Tax,Data,USD,2020-12-10,ADM(US0394831020) Cash Dividend USD 0.36 per Share - US Tax,-1.13,
+Withholding Tax,Data,USD,2020-12-11,HII(US4464131063) Cash Dividend USD 1.14 per Share - US Tax,-1.03,
+Withholding Tax,Data,USD,2020-12-11,WBA(US9314271084) Cash Dividend USD 0.4675 per Share - US Tax,-1.75,
+Withholding Tax,Data,USD,2020-12-24,LMT(US5398301094) Cash Dividend USD 2.60 per Share - US Tax,-1.17,
+Withholding Tax,Data,USD,2020-12-30,TDS(US8794338298) Cash Dividend USD 0.17 per Share - US Tax,-0.59,
+Withholding Tax,Data,USD,2020-12-30,TDS(US8794338298) Payment in Lieu of Dividend - US Tax,-0.92,
+Withholding Tax,Data,USD,2020-12-31,MTB(US55261F1049) Cash Dividend USD 1.10 per Share - US Tax,-1.49,
+Withholding Tax,Data,Total,,,-15.76,
+Interest,Header,Currency,Date,Description,Amount
+Interest,Data,USD,2020-08-05,USD IBKR Managed Securities (SYEP) Interest for Jul-2020,0.12
+Interest,Data,USD,2020-09-03,USD IBKR Managed Securities (SYEP) Interest for Aug-2020,0.27
+Interest,Data,USD,2020-10-05,USD IBKR Managed Securities (SYEP) Interest for Sep-2020,0.01
+Interest,Data,USD,2020-11-04,USD IBKR Managed Securities (SYEP) Interest for Oct-2020,0.01
+Interest,Data,USD,2020-12-03,USD IBKR Managed Securities (SYEP) Interest for Nov-2020,0.02
+Interest,Data,Total,,,0.43
+Interest Accruals,Header,Currency,Field Name,Field Value
+Interest Accruals,Data,Base Currency Summary,Starting Accrual Balance,0
+Interest Accruals,Data,Base Currency Summary,Interest Accrued,0.43
+Interest Accruals,Data,Base Currency Summary,Accrual Reversal,-0.43
+Interest Accruals,Data,Base Currency Summary,Ending Accrual Balance,0
+Change in Dividend Accruals,Header,Asset Category,Currency,Symbol,Date,Ex Date,Pay Date,Quantity,Tax,Fee,Gross Rate,Gross Amount,Net Amount,Code
+Change in Dividend Accruals,Data,Starting Dividend Accruals in USD,,,,,,,,,,,0,
+Change in Dividend Accruals,Data,Stocks,USD,ABBV,2020-10-13,2020-10-14,2020-11-16,11,1.95,0,1.18,12.98,11.03,Po
+Change in Dividend Accruals,Data,Stocks,USD,ABBV,2020-11-16,2020-10-14,2020-11-16,11,-1.95,0,1.18,-12.98,-11.03,Re
+Change in Dividend Accruals,Data,Stocks,USD,ADM,2020-11-17,2020-11-18,2020-12-10,21,1.13,0,0.36,7.56,6.43,Po
+Change in Dividend Accruals,Data,Stocks,USD,ADM,2020-12-10,2020-11-18,2020-12-10,21,-1.13,0,0.36,-7.56,-6.43,Re
+Change in Dividend Accruals,Data,Stocks,USD,BMY,2020-12-30,2020-12-31,2021-02-01,16,1.18,0,0.49,7.84,6.66,Po
+Change in Dividend Accruals,Data,Stocks,USD,CSCO,2020-09-30,2020-10-01,2020-10-21,23,1.24,0,0.36,8.28,7.04,Po
+Change in Dividend Accruals,Data,Stocks,USD,CSCO,2020-10-21,2020-10-01,2020-10-21,23,-1.24,0,0.36,-8.28,-7.04,Re
+Change in Dividend Accruals,Data,Stocks,USD,EBTC,2020-11-06,2020-11-09,2020-12-01,43,1.13,0,0.175,7.53,6.4,Po
+Change in Dividend Accruals,Data,Stocks,USD,EBTC,2020-12-01,2020-11-09,2020-12-01,43,-1.13,0,0.175,-7.53,-6.4,Re
+Change in Dividend Accruals,Data,Stocks,USD,HII,2020-11-24,2020-11-25,2020-12-11,6,1.03,0,1.14,6.84,5.81,Po
+Change in Dividend Accruals,Data,Stocks,USD,HII,2020-12-11,2020-11-25,2020-12-11,6,-1.03,0,1.14,-6.84,-5.81,Re
+Change in Dividend Accruals,Data,Stocks,USD,INTC,2020-08-05,2020-08-06,2020-09-01,20,0.99,0,0.33,6.6,5.61,Po
+Change in Dividend Accruals,Data,Stocks,USD,INTC,2020-09-01,2020-08-06,2020-09-01,20,-0.99,0,0.33,-6.6,-5.61,Re
+Change in Dividend Accruals,Data,Stocks,USD,INTC,2020-11-04,2020-11-05,2020-12-01,20,0.99,0,0.33,6.6,5.61,Po
+Change in Dividend Accruals,Data,Stocks,USD,INTC,2020-12-01,2020-11-05,2020-12-01,20,-0.99,0,0.33,-6.6,-5.61,Re
+Change in Dividend Accruals,Data,Stocks,USD,LEG,2020-09-11,2020-09-14,2020-10-15,23,1.38,0,0.4,9.2,7.82,Po
+Change in Dividend Accruals,Data,Stocks,USD,LEG,2020-10-15,2020-09-14,2020-10-15,23,-1.38,0,0.4,-9.2,-7.82,Re
+Change in Dividend Accruals,Data,Stocks,USD,LEG,2020-12-11,2020-12-14,2021-01-15,23,1.38,0,0.4,9.2,7.82,Po
+Change in Dividend Accruals,Data,Stocks,USD,LMT,2020-11-27,2020-11-30,2020-12-24,3,1.17,0,2.6,7.8,6.63,Po
+Change in Dividend Accruals,Data,Stocks,USD,LMT,2020-12-24,2020-11-30,2020-12-24,3,-1.17,0,2.6,-7.8,-6.63,Re
+Change in Dividend Accruals,Data,Stocks,USD,MTB,2020-11-27,2020-11-30,2020-12-31,9,1.49,0,1.1,9.9,8.41,Po
+Change in Dividend Accruals,Data,Stocks,USD,MTB,2020-12-31,2020-11-30,2020-12-31,9,-1.49,0,1.1,-9.9,-8.41,Re
+Change in Dividend Accruals,Data,Stocks,USD,NFG,2020-12-29,2020-12-30,2021-01-15,23,1.54,0,0.445,10.24,8.7,Po
+Change in Dividend Accruals,Data,Stocks,USD,TDS,2020-12-14,2020-12-15,2020-12-30,59,1.5,0,0.17,10.03,8.53,Po
+Change in Dividend Accruals,Data,Stocks,USD,TDS,2020-12-14,2020-12-15,2020-12-30,59,1.51,0,0.17,10.03,8.52,Po
+Change in Dividend Accruals,Data,Stocks,USD,TDS,2020-12-14,2020-12-15,2020-12-30,59,-1.5,0,0.17,-10.03,-8.53,Re
+Change in Dividend Accruals,Data,Stocks,USD,TDS,2020-12-30,2020-12-15,2020-12-30,59,-1.51,0,0.17,-10.03,-8.52,Re
+Change in Dividend Accruals,Data,Stocks,USD,WBA,2020-11-17,2020-11-18,2020-12-11,25,1.75,0,0.4675,11.69,9.94,Po
+Change in Dividend Accruals,Data,Stocks,USD,WBA,2020-12-11,2020-11-18,2020-12-11,25,-1.75,0,0.4675,-11.69,-9.94,Re
+Change in Dividend Accruals,Data,Total,,,,,,,4.1,0,,27.28,23.18,
+Change in Dividend Accruals,Data,Ending Dividend Accruals in USD,,,,,,,,,,,23.18,
+Stock Yield Enhancement Program Securities Lent Activity,Header,Asset Category,Currency,Symbol,Date,Description, ,Transaction ID,Quantity,Collateral Amount
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,AAAU,2020-07-30,New Loan Allocation, ,SLB.56616344,-59,1239
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,AAAU,2020-07-31,Loan Return Allocation, ,SLB.56616344,59,-1239
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,AAAU,2020-07-31,New Loan Allocation, ,SLB.56616344,-59,1180
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,AAAU,2020-08-03,Loan Return Allocation, ,SLB.56616344,59,-1180
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,AAAU,2020-08-03,New Loan Allocation, ,SLB.56650756,-98,2058
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,AAAU,2020-08-04,Loan Return Allocation, ,SLB.56650756,98,-2058
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,AAAU,2020-08-04,New Loan Allocation, ,SLB.56650756,-44,924
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,AAAU,2020-08-05,Loan Return Allocation, ,SLB.56650756,44,-924
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,AAAU,2020-09-09,New Loan Allocation, ,SLB.57098930,-12,240
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,AAAU,2020-09-10,Loan Return Allocation, ,SLB.57098930,12,-240
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,AAAU,2020-10-05,New Loan Allocation, ,SLB.57391932,-4,80
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,AAAU,2020-10-06,Loan Return Allocation, ,SLB.57391932,4,-80
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,EBTC,2020-11-02,New Loan Allocation, ,SLB.57692723,-17,408
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,EBTC,2020-11-03,Loan Return Allocation, ,SLB.57692723,17,-408
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,EBTC,2020-11-03,New Loan Allocation, ,SLB.57713508,-17,408
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,EBTC,2020-11-04,Loan Return Allocation, ,SLB.57713508,17,-408
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,EBTC,2020-12-08,New Loan Allocation, ,SLB.58106186,-12,324
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,EBTC,2020-12-09,Loan Return Allocation, ,SLB.58106186,12,-324
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,EBTC,2020-12-14,New Loan Allocation, ,SLB.58174637,-12,336
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,EBTC,2020-12-15,Loan Return Allocation, ,SLB.58174637,12,-336
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,EBTC,2020-12-15,New Loan Allocation, ,SLB.58174637,-8,224
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,EBTC,2020-12-16,Loan Return Allocation, ,SLB.58174637,8,-224
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,EBTC,2020-12-17,New Loan Allocation, ,SLB.58222284,-11,308
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,EBTC,2020-12-18,Loan Return Allocation, ,SLB.58222284,11,-308
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-16,New Loan Allocation, ,SLB.57846194,-36,720
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-17,Loan Return Allocation, ,SLB.57846194,36,-720
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-17,New Loan Allocation, ,SLB.57846194,-58,1160
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-18,Loan Return Allocation, ,SLB.57846194,58,-1160
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-18,New Loan Allocation, ,SLB.57846194,-56,1120
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-19,Loan Return Allocation, ,SLB.57846194,56,-1120
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-19,New Loan Allocation, ,SLB.57846194,-42,840
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-20,Loan Return Allocation, ,SLB.57846194,42,-840
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-20,New Loan Allocation, ,SLB.57846194,-58,1160
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-23,Loan Return Allocation, ,SLB.57846194,58,-1160
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-23,New Loan Allocation, ,SLB.57846194,-50,1000
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-24,Loan Return Allocation, ,SLB.57846194,50,-1000
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-24,New Loan Allocation, ,SLB.57846194,-49,980
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-25,Loan Return Allocation, ,SLB.57846194,49,-980
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-25,New Loan Allocation, ,SLB.57846194,-45,945
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-26,Loan Return Allocation, ,SLB.57846194,45,-945
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-26,New Loan Allocation, ,SLB.57846194,-42,840
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-27,Loan Return Allocation, ,SLB.57846194,42,-840
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-27,New Loan Allocation, ,SLB.57846194,-56,1120
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-30,Loan Return Allocation, ,SLB.57846194,56,-1120
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-11-30,New Loan Allocation, ,SLB.57846194,-49,1029
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-01,Loan Return Allocation, ,SLB.57846194,49,-1029
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-01,New Loan Allocation, ,SLB.57846194,-47,940
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-02,Loan Return Allocation, ,SLB.57846194,47,-940
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-02,New Loan Allocation, ,SLB.57846194,-44,880
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-03,Loan Return Allocation, ,SLB.57846194,44,-880
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-03,New Loan Allocation, ,SLB.57846194,-42,840
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-04,Loan Return Allocation, ,SLB.57846194,42,-840
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-04,New Loan Allocation, ,SLB.57846194,-44,880
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-07,Loan Return Allocation, ,SLB.57846194,44,-880
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-07,New Loan Allocation, ,SLB.57846194,-43,860
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-08,Loan Return Allocation, ,SLB.57846194,43,-860
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-08,New Loan Allocation, ,SLB.57846194,-42,840
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-09,Loan Return Allocation, ,SLB.57846194,42,-840
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-09,New Loan Allocation, ,SLB.57846194,-41,820
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-10,Loan Return Allocation, ,SLB.57846194,41,-820
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-10,New Loan Allocation, ,SLB.57846194,-39,780
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-11,Loan Return Allocation, ,SLB.57846194,39,-780
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-11,New Loan Allocation, ,SLB.57846194,-57,1140
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-14,Loan Return Allocation, ,SLB.57846194,57,-1140
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-14,New Loan Allocation, ,SLB.57846194,-56,1120
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-15,Loan Return Allocation, ,SLB.57846194,56,-1120
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-15,New Loan Allocation, ,SLB.57846194,-54,1080
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-16,Loan Return Allocation, ,SLB.57846194,54,-1080
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-16,New Loan Allocation, ,SLB.57846194,-36,720
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-17,Loan Return Allocation, ,SLB.57846194,36,-720
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-17,New Loan Allocation, ,SLB.57846194,-14,280
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-18,Loan Return Allocation, ,SLB.57846194,14,-280
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-18,New Loan Allocation, ,SLB.57846194,-14,280
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-21,Loan Return Allocation, ,SLB.57846194,14,-280
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-21,New Loan Allocation, ,SLB.57846194,-13,247
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-22,Loan Return Allocation, ,SLB.57846194,13,-247
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-22,New Loan Allocation, ,SLB.57846194,-12,228
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-23,Loan Return Allocation, ,SLB.57846194,12,-228
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-23,New Loan Allocation, ,SLB.57846194,-11,209
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-24,Loan Return Allocation, ,SLB.57846194,11,-209
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-24,New Loan Allocation, ,SLB.57846194,-7,133
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-25,Loan Return Allocation, ,SLB.57846194,7,-133
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-25,New Loan Allocation, ,SLB.57846194,-6,114
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-28,Loan Return Allocation, ,SLB.57846194,6,-114
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-28,New Loan Allocation, ,SLB.57846194,-6,114
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-29,Loan Return Allocation, ,SLB.57846194,6,-114
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-29,New Loan Allocation, ,SLB.57846194,-6,114
+Stock Yield Enhancement Program Securities Lent Activity,Data,Stocks,USD,TDS,2020-12-30,Loan Return Allocation, ,SLB.57846194,6,-114
+Stock Yield Enhancement Program Securities Lent Activity,Data,Total,,,,,,,,,0
+Stock Yield Enhancement Program Securities Lent Activity,Notes,"Important Notice re: SIPC Protection for Loans of Fully Paid and Excess Margin Securities:  Please be aware that if you execute loans of your fully paid or excess margin securities, the  provisions of the Securities Investor Protection Act of 1970 may not protect you with respect to the securities loan transaction.  Therefore, the collateral value credited to your account by Interactive Brokers (see above) may constitute the only source of satisfaction in the event that Interactive Brokers cannot return the securities."
+Stock Yield Enhancement Program Securities Lent Interest Details,Header,Currency,Value Date,Symbol,Start Date,Quantity,Collateral Amount,Market-based Rate (%),Interest Rate on Customer Collateral (%),Interest Paid to Customer,Code
+Stock Yield Enhancement Program Securities Lent Interest Details,Data,USD,2020-07-30,AAAU,2020-07-30,-59,1239,3.36,1.68,0.06,Po
+Stock Yield Enhancement Program Securities Lent Interest Details,Data,USD,2020-07-31,AAAU,2020-07-31,-59,1180,3.41,1.71,0.06,Po
+Stock Yield Enhancement Program Securities Lent Interest Details,Data,USD,2020-08-01,AAAU,2020-08-01,-59,1180,3.41,1.71,0.06,Po
+Stock Yield Enhancement Program Securities Lent Interest Details,Data,USD,2020-08-02,AAAU,2020-08-02,-59,1180,3.41,1.71,0.06,Po
+Stock Yield Enhancement Program Securities Lent Interest Details,Data,USD,2020-08-03,AAAU,2020-08-03,-98,2058,3.44,1.72,0.1,Po
+Stock Yield Enhancement Program Securities Lent Interest Details,Data,USD,2020-08-04,AAAU,2020-08-04,-44,924,3.79,1.9,0.05,Po
+Stock Yield Enhancement Program Securities Lent Interest Details,Data,USD,2020-09-09,AAAU,2020-09-09,-12,240,3.58,1.79,0.01,Po
+Stock Yield Enhancement Program Securities Lent Interest Details,Data,USD,2020-10-05,AAAU,2020-10-05,-4,80,3.33,1.67,0.01,Po
+Stock Yield Enhancement Program Securities Lent Interest Details,Data,USD,2020-11-02,EBTC,2020-11-02,-17,408,1.83,0.92,0.01,Po
+Stock Yield Enhancement Program Securities Lent Interest Details,Data,USD,2020-11-03,EBTC,2020-11-03,-17,408,0.93,0.47,0.01,Po
+Stock Yield Enhancement Program Securities Lent Interest Details,Data,Total,,,,,,,,0.43,
+Financial Instrument Information,Header,Asset Category,Symbol,Description,Conid,Security ID,Listing Exch,Multiplier,Type,Code
+Financial Instrument Information,Data,Stocks,AAAU,GOLDMAN SACHS PHYSICAL GOLD,458886642,US38150K1034,ARCA,1,ETF,
+Financial Instrument Information,Data,Stocks,"AAAU, AAAU.OLD",PERTH MINT PHYSICAL GOLD ETF,329705746,US7154261025,ARCA,1,ETF,
+Financial Instrument Information,Data,Stocks,ABBV,ABBVIE INC,118089500,US00287Y1091,NYSE,1,COMMON,
+Financial Instrument Information,Data,Stocks,ADM,ARCHER-DANIELS-MIDLAND CO,4165,US0394831020,NYSE,1,COMMON,
+Financial Instrument Information,Data,Stocks,BMY,BRISTOL-MYERS SQUIBB CO,5111,US1101221083,NYSE,1,COMMON,
+Financial Instrument Information,Data,Stocks,CSCO,CISCO SYSTEMS INC,268084,US17275R1023,NASDAQ,1,COMMON,
+Financial Instrument Information,Data,Stocks,EBTC,ENTERPRISE BANCORP INC,33204301,US2936681095,NASDAQ,1,COMMON,
+Financial Instrument Information,Data,Stocks,HII,HUNTINGTON INGALLS INDUSTRIE,86033355,US4464131063,NYSE,1,COMMON,
+Financial Instrument Information,Data,Stocks,INTC,INTEL CORP,270639,US4581401001,NASDAQ,1,COMMON,
+Financial Instrument Information,Data,Stocks,LEG,LEGGETT & PLATT INC,9081,US5246601075,NYSE,1,COMMON,
+Financial Instrument Information,Data,Stocks,LMT,LOCKHEED MARTIN CORP,611191,US5398301094,NYSE,1,COMMON,
+Financial Instrument Information,Data,Stocks,MTB,M & T BANK CORP,2585323,US55261F1049,NYSE,1,COMMON,
+Financial Instrument Information,Data,Stocks,NFG,NATIONAL FUEL GAS CO,10199,US6361801011,NYSE,1,COMMON,
+Financial Instrument Information,Data,Stocks,NOC,NORTHROP GRUMMAN CORP,10376,US6668071029,NYSE,1,COMMON,
+Financial Instrument Information,Data,Stocks,T,AT&T INC,37018770,US00206R1023,NYSE,1,COMMON,
+Financial Instrument Information,Data,Stocks,TDS,TELEPHONE AND DATA SYSTEMS,101387488,US8794338298,NYSE,1,COMMON,
+Financial Instrument Information,Data,Stocks,WBA,WALGREENS BOOTS ALLIANCE INC,178634687,US9314271084,NASDAQ,1,COMMON,
+Codes,Header,Code,Meaning,Code (Cont.),Meaning (Cont.)
+Codes,Data,A,Assignment
+Codes,Data,ADR,ADR Fee Accrual
+Codes,Data,AEx,Automatic exercise for dividend-related recommendation.
+Codes,Data,AFx,AutoFX conversion resulting from trading
+Codes,Data,Adj,Adjustment
+Codes,Data,Al,Allocation
+Codes,Data,Aw,Away Trade
+Codes,Data,B,Automatic Buy-in
+Codes,Data,Bo,Direct Borrow
+Codes,Data,C,Closing Trade
+Codes,Data,CD,Cash Delivery
+Codes,Data,CP,Complex Position
+Codes,Data,Ca,Cancelled
+Codes,Data,Co,Corrected Trade
+Codes,Data,Cx,Part or all of this transaction was a Crossing executed as dual agent by IB for two IB customers
+Codes,Data,ETF,ETF Creation/Redemption
+Codes,Data,Ep,Resulted from an Expired Position
+Codes,Data,Ex,Exercise
+Codes,Data,FP,The fractional portion of this trade was executed against IB or an affiliate.
+Codes,Data,FPA,The fractional portion of this trade was executed against IB or an affiliate. IB acted as agent for the whole share portion of this trade.
+Codes,Data,G,Trade in Guaranteed Account Segment
+Codes,Data,GEA,Exercise or Assignment resulting from offsetting positions
+Codes,Data,HC,Highest Cost tax basis election
+Codes,Data,HFI,Investment Transferred to Hedge Fund
+Codes,Data,HFR,Redemption from Hedge Fund
+Codes,Data,I,Internal Transfer
+Codes,Data,IA,The transaction was executed against IB or an affiliate
+Codes,Data,IM,A portion of the order was executed against IB or an affiliate; IB acted as agent on a portion.
+Codes,Data,INV,Investment Transfer from Investor
+Codes,Data,IPO,This transaction was executed as part of an IPO in which IB was a member of the selling group and is classified as a Principal trade.
+Codes,Data,L,Ordered by IB (Margin Violation)
+Codes,Data,LD,Adjusted by Loss Disallowed from Wash Sale
+Codes,Data,LI,"Last In, First Out (LIFO) tax basis election"
+Codes,Data,LT,Long Term P/L
+Codes,Data,Lo,Direct Loan
+Codes,Data,M,Entered manually by IB
+Codes,Data,MEx,Manual exercise for dividend-related recommendation.
+Codes,Data,ML,Maximize Losses tax basis election
+Codes,Data,MLG,Maximize Long Term Gain tax basis election
+Codes,Data,MLL,Maximize Long Term Loss tax basis election
+Codes,Data,MSG,Maximize Short Term Gain tax basis election
+Codes,Data,MSL,Maximize Short Term Loss tax basis election
+Codes,Data,O,Opening Trade
+Codes,Data,P,Partial Execution
+Codes,Data,PE,Perpetual Investment
+Codes,Data,PI,Price Improvement
+Codes,Data,Po,Interest or Dividend Accrual Posting
+Codes,Data,Pr,Part or all of this transaction was executed by the Exchange as a Crossing by IB against an IB affiliate and is therefore classified as a Principal and not an agency trade
+Codes,Data,R,Dividend Reinvestment
+Codes,Data,RED,Redemption to Investor
+Codes,Data,RI,Recurring Investment
+Codes,Data,RP,"IB acted as agent for the fractional share portion of this trade, which was executed by an IB affiliate as riskless principal."
+Codes,Data,RPA,IB acted as agent for both the fractional share portion and the whole share portion of this trade; the fractional share portion was executed by an IB Affiliate as riskless principal.
+Codes,Data,Rb,Rebill
+Codes,Data,Re,Interest or Dividend Accrual Reversal
+Codes,Data,Ri,Reimbursement
+Codes,Data,SF,Trade is subject to IBKR Lite Surcharge Fee if volume of such trades exceeds 10% of the total monthly Lite trade volume
+Codes,Data,SI,This order was solicited by Interactive Brokers
+Codes,Data,SL,Specific Lot tax basis election
+Codes,Data,SO,This order was marked as solicited by your Introducing Broker
+Codes,Data,SS,Customer designated this trade for shortened settlement and so is subject to execution at prices above the prevailing market
+Codes,Data,ST,Short Term P/L
+Codes,Data,T,Transfer
+Codes,Data,Un,Unvested shares from stock grant
+Codes,Data,XCH,Mutual Fund Exchange Transaction
+Notes/Legal Notes,Header,Type,Note
+Notes/Legal Notes,Data,Notes,"Most stock exchange transactions settle on the trade date plus two business days. Options, futures and US open-end mutual fund transactions settle on trade date plus one business day. (Some exchanges and other transaction types may have longer or shorter settlement periods.) Ending settled cash reflects the cash that has actually settled.  "
+Notes/Legal Notes,Data,Notes,Initial and maintenance margin requirements are available within the Account Window of the Trader Workstation.
+Notes/Legal Notes,Data,Notes,"Interactive Brokers LLC receives compensation from fund companies in connection with the purchase and holding of fund shares by customers of Interactive Brokers LLC. Such compensation includes, but is not limited to, Rule 12b-1 fees that are paid out of the funds assets. The source and amount of any remuneration received by Interactive Brokers LLC in connection with a transaction will be furnished upon written request of the customer.  IB may share a portion of the compensation received from fund companies with your financial advisor or introducing broker."
+Notes/Legal Notes,Data,Notes,Quantities preceded by a "-" sign indicate sell transactions. Other transactions are purchases. 
+Notes/Legal Notes,Data,Notes,"IB acts as agent in executing the fractional share portion of your order. In certain circumstances, IB routes the fractional portion of your order to an affiliate, which may execute the fractional portion of the order as principal. In such circumstances, this is indicated by the codes associated with the trade. If an IB affiliate acts as principal in executing any fractional share portion of your order, the order will be executed at the price displayed for the opposite side of the NBBO from your order (the offer if you are buying and the bid if you are selling) at the time of execution. If an IB affiliate is acting as riskless principal in connection with filling the fractional share portion of your order, the affiliate will execute the fractional share portion of your order at the price it receives for the execution of the whole share."
+Notes/Legal Notes,Data,Notes,"In case of partial executions, commissions are charged on the total quantity executed on the original order. The commission is displayed on the first partial execution only."
+Notes/Legal Notes,Data,Notes,Each closed lot indicated above with a reference to note (6) was chosen by the end of the trading day to be sold versus the specific opening purchase identified in that row.
+Notes/Legal Notes,Data,Notes,Trade execution times are displayed in Eastern Time.
+Notes/Legal Notes,Data,Notes,Applicable regulatory fees for your transactions are available on the IB website at www.interactivebrokers.com/en/accounts/fees/exchangeAndRegulatoryFees.php.
+Notes/Legal Notes,Data,Notes,"Borrow Fee Rate represents the cost to borrow stock expressed in percent per annum. It is applied to the collateral value on the stock borrow contract and is separate from any interest earned on credit cash balances. Similarly, Loan Fee Rate represents the benefit to lend stock. A positive rate indicates a cost to the borrower/benefit to the lender and a negative rate indicates a benefit to the borrower/cost to the lender. In general, the fee rates for hard-to-borrow stocks are higher than for normal availability stocks."
+Notes/Legal Notes,Data,Notes,Interest Rate on Customer Collateral represents the interest paid on the collateral posted to the customer's account and received from lending stock.  A positive rate indicates a benefit to the lender.
+Notes/Legal Notes,Data,Notes,"The closing prices on this Activity Statement are indicative and may come from third-party sources. Interactive Brokers does not warrant the accuracy of the prices provided by third-party sources. Due to time zone differences, certain non-US mutual funds may deliver closing prices after the Activity Statement has been produced and the closing prices for such funds will reflect the previous day's price."
+Notes/Legal Notes,Data,Notes,All Market Data and Research services are provided through Global Financial Information Services (GmbH).
+Notes/Legal Notes,Data,Notes,"Market data is provided by Global Financial Information Services (GmbH). Your local broker collects amounts owed for fees and tax for such data on behalf of Global Financial Information Services (GmbH). Note, you are responsible for any applicable taxes relating to the provision of these services."
+Notes/Legal Notes,Data,Fixed Income Notes,"Call features for bonds or preferred stocks may affect the yield. For zero coupon, compound interest and multiplier securities, there are no periodic payments and securities may be callable below maturity value without notice to holder unless registered. For asset-backed securities, the actual yield may vary depending on the speed at which the underlying note is pre-paid. For additional information regarding bond yield, please contact the IB Help Desk at: help@interactivebrokers.com. If this debt security is unrated by a nationally recognized statistical rating organization, it may pose a high risk of default. You should consult a financial advisor to determine whether unrated bonds are appropriate for your portfolio in light of your goals and your financial circumstances. Fees charged by bond trading centers are included in the cost of bond transactions."
+Notes/Legal Notes,Data,Legal Notes,"Please promptly report any inaccuracy or discrepancy in this statement, or in your account. Contact the IB Customer Service Department in writing using the form available on the IB website. You may also contact IB by phone, but if you report an error by phone, you should re-confirm such oral communication in writing in order to protect your rights, including rights under the Securities Investor Protection Act (SIPA).Interactive Brokers:Interactive Brokers LLC, www.interactivebrokers.com, 877-442-2757 (U.S.)Interactive Brokers (UK) (Ltd), www.interactivebrokers.co.uk, 00800-42-276537 (Intl)Interactive Brokers Canada Inc., www.interactivebrokers.ca, 877-745-4222 (Can.)"
+Notes/Legal Notes,Data,Legal Notes,"Unless otherwise noted, Interactive Brokers acted as agent in the execution of the above transactions. For those exchanges where IB is not a direct clearing member or custodian, IB may use one of the following clearing agents or sub-custodians: Interactive Brokers Australia Pty Limited; Interactive Brokers Canada Inc.; Interactive Brokers Central Europe Zrt.; Interactive Brokers Hong Kong Limited; Interactive Brokers Securities Japan, Inc.; Interactive Brokers (U.K.) Limited; IBKR Financial Services AG; ABN Amro Clearing Singapore Pte. Ltd.; BBVA Bancomer, S.A.; BNP Securities Services, Milan Branch; BMO Harris Bank N.A.; Citibank Europe plc; Skandinaviska Enskilda Banken AB (including select branches)."
+Notes/Legal Notes,Data,Legal Notes,"IB acts as agent or riskless principal in foreign currency exchange transactions and as riskless principal in spot precious metals transactions.  Such transactions are executed against an IB affiliate or a third party, which acts as principal in such transactions and may have a long or short position and may have profited or lost in connection with the transaction.  Foreign currency exchange and spot precious metals transactions executed by Customer through IB are not regulated or overseen by the SEC or the CFTC."
+Notes/Legal Notes,Data,Legal Notes,"All VWAP trades are effected pursuant to an average price formula based on a reference price provided by a third-party data provider. Additional information and reference prices are available upon request. IB, as agent, effects VWAP transactions through a market making affiliate, which acts as principal in such transactions and may have a long or short position in the security and may have profited or lost in connection with the transaction."
+Notes/Legal Notes,Data,Legal Notes,"IB accepts liquidity rebates or other order flow payments from Alternative Trading Systems, market makers and exchanges for certain orders in stocks. IB receives payment for some option orders pursuant to exchange-mandated marketing fee programs or other arrangements. The source and nature of any compensation received by IB in connection with any transaction is available upon written request of the customer. For further information, check the IB website and the Order Routing and Payment for Order Flow Disclosure provided when you opened your account and annually or email help@interactivebrokers.com.  "
+Notes/Legal Notes,Data,Legal Notes,"For security futures trades, if not already indicated on this statement, information about the time of any transaction, the identity of the counterparty to the transaction, and whether IB is acting as agent or principal, as agent for the counterparty, as agent for both parties to the contract, or as principal, and if acting as principal, whether the transaction was a block transaction or an exchange for physicals transaction, will be available upon written request of the customer."
+Notes/Legal Notes,Data,Legal Notes,Customer is requested to promptly advise Interactive Brokers of any material change in Customers investment objectives.
+Notes/Legal Notes,Data,Legal Notes,"A financial statement of Interactive Brokers LLC is available for your personal inspection at www.interactivebrokers.com or at its offices, or a copy of it will be mailed upon your written request."
+Notes/Legal Notes,Data,Legal Notes,"For trades executed on the ASX market, the ASX 24 market and the Cboe Australia market, this confirmation is issued subject to: (i) the Applicable Laws, the directions, decisions and requirements of the relevant market operator, the operating rules of the relevant market, the clearing rules and where relevant, the relevant settlement rules, (ii) the customs and usages of the relevant financial market, and (iii) the correction of errors and omissions. Trades in Cash Market Products (as that term is defined in the relevant ASIC market integrity rules) on ASX market and Cboe Australia are cleared by BNP Paribas, ARBN 149 440 291, AFSL 402467, who is a participant of ASX Clear Pty Ltd and ASX Settlement Pty Ltd. Trades in Derivative Products on ASX and all products on ASX 24 are cleared by Interactive Brokers Australia (“IBA”) as a participant of ASX Clear Pty Ltd and ASX Clear (Futures) Pty Ltd. If your transaction was a crossing transaction, IBA may have either acted on behalf of (i) both the buyer and seller of this transaction, or (ii) on behalf of the buyer or seller on one side of the transaction and acted as Principal on the other side. Under the Corporations Act 2001, where IBA enters into an exchange traded derivative on a customer's behalf, IBA is regarded as having issued the derivative to the customer."
+Notes/Legal Notes,Data,Legal Notes,"For All Options Trades Executed on the Stock Exchange of Hong Kong (""SEHK""): (a) Options can involve a high degree of risk and may not be suitable for every investor. Investors should ensure they understand those risks before participating in the options market. (b) All options contracts executed on the SEHK were executed by Interactive Brokers Hong Kong Limited on behalf of Interactive Brokers LLC. (c) In the event of a default committed by Interactive Brokers LLC resulting in the client suffering any pecuniary loss, the client shall have a right to claim under the Investor Compensation Fund established under the Hong Kong Securities and Futures Ordinance, subject to the terms of the Investor Compensation Fund from time to time. (d) All Exchange Traded Options Business made for or on behalf of a client shall be subject to the relevant provisions of the constitution, Rules of The Stock Exchange of Hong Kong Limited (""SEHK Rules""), regulations, the Articles, customs and usages of SEHK, the Options Trading Rules, the Clearing Rules of SEOCH, the CCASS Rules and the laws of Hong Kong, which shall be binding on both Interactive Brokers LLC and the client."
+Notes/Legal Notes,Data,Legal Notes,"Interactive Brokers LLC is a SIPC member. Deposits held away from Interactive Brokers LLC may not qualify under SIPC protection. Also, futures and options on futures are not covered by SIPC."
+Notes/Legal Notes,Data,,Interactive Brokers LLC is a SIPC Member

@@ -21,8 +21,8 @@ sealed trait Transaction {
 object Transaction {
   val readDateformat = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
 
-  def apply(array: Array[String]): Entry =
-    (array(2), array(7), array(4), readDateformat.parse(array(5)), array(6).toDouble) match {
+  def apply(fields: Seq[String]): Entry =
+    (fields(2), fields(7), fields(4), readDateformat.parse(fields(5)), fields(6).toDouble) match {
       case (symbol, asset, operation, date, sum) => Entry(symbol, asset, operation, date, sum)
     }
 
